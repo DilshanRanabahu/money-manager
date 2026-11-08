@@ -113,7 +113,9 @@ One icon set only: **Ionicons** (outline variants) via `@expo/vector-icons`, 16�
 
 - Month switcher (shared with Home via `uiStore`).
 - Total expense at the top.
-- List of categories, sorted by amount: icon · name · amount · percent · thin progress bar in the category color.
+- Total at the top, with a change tag underneath ("▲ 20% vs Oct 1–8").
+- Pace card (Spending only): per-day average; for the current month the month-end estimate and a green "Leaves about …" or red "… more than you have" line. Estimates use whole rupees.
+- List of categories, sorted by amount: icon · name · change tag · amount · percent · thin progress bar in the category color · chevron. Tapping opens `category/[id]` (entries of that category, biggest first). The carry-over row is not tappable.
 - Toggle Expense / Income.
 
 ### Settings

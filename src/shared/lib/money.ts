@@ -47,12 +47,16 @@ export type FormatOptions = {
   signed?: boolean;
   /** Hide the currency symbol. */
   bare?: boolean;
+  /** Round to whole rupees and drop the cents (for estimates and averages). */
+  whole?: boolean;
 };
 
-/** 125050 -> "Rs. 1,250.50" */
+/** 125050 -> "Rs. 1,250.50" (with `whole`: "Rs. 1,251") */
 export function formatAmount(minor: number, options: FormatOptions = {}): string {
   'worklet';
-  const body = formatNumber(Math.abs(minor));
+  const body = options.whole
+    ? groupDigits(String(Math.round(Math.abs(minor) / 100)))
+    : formatNumber(Math.abs(minor));
   const symbol = options.bare ? '' : CURRENCY_SYMBOL + ' ';
   let sign = '';
   if (minor < 0) sign = '−';

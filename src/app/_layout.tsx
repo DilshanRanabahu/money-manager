@@ -58,6 +58,7 @@ function RootStack() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="category/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="transaction/new" options={sheet} />
       <Stack.Screen name="transaction/[id]" options={sheet} />
     </Stack>

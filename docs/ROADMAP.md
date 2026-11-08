@@ -51,6 +51,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 ## Done after v1
 - [x] Carry last month's leftover into the new month as an automatic income entry (negative if overspent)
 - [x] Expense categories "AI subscriptions" and "API subscriptions"
+- [x] Breakdown: change vs last month, spending pace + month-end estimate, tap a category to see its entries
 
 ## Later
 

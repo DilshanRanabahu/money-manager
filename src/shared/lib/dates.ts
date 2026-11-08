@@ -71,6 +71,22 @@ export function monthName(month: MonthKey): string {
   return MONTHS[Number(month.split('-')[1]) - 1];
 }
 
+/** "2026-10" -> "Oct" */
+export function monthShortName(month: MonthKey): string {
+  return MONTHS_SHORT[Number(month.split('-')[1]) - 1];
+}
+
+/** "2026-02" -> 28 */
+export function daysInMonth(month: MonthKey): number {
+  const [y, m] = month.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+/** "2026-11-08" -> 8 */
+export function dayOfMonth(date: ISODate): number {
+  return Number(date.slice(8, 10));
+}
+
 /** "Today", "Yesterday", or "Sat, 7 Nov" (adds year if not the current year) */
 export function formatDayLabel(date: ISODate, today: ISODate = todayISO()): string {
   if (date === today) return 'Today';

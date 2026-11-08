@@ -46,6 +46,9 @@ A personal app that answers three questions, fast:
 ### 5. Breakdown
 - A simple per-category list for the selected month: category, amount, % of total expense, a thin bar.
 - This is the "where did my money go" answer. No pie charts.
+- **Change vs last month**: the total and each category show ▲/▼ % (red when spending rises or income falls, green otherwise; "New" / "Same"). The current month is compared with the same days of last month (Nov 1–8 vs Oct 1–8); past months with the whole previous month. Hidden when last month has no data.
+- **Spending pace** (Spending tab): average per day. For the current month also an estimate for the month end: what has been spent so far plus what was spent in the rest of last month (falls back to a straight line if last month is empty), with a note whether it fits the money available this month (income + carry-over).
+- **Tap a category** to see its entries for the month, biggest first; tap an entry to edit it.
 
 ### 6. Backup
 - Export all data to a JSON file (share sheet).

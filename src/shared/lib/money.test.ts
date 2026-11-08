@@ -43,6 +43,8 @@ describe('formatting', () => {
     expect(formatAmount(85000, { signed: true })).toBe('+Rs. 850.00');
     expect(formatAmount(0, { signed: true })).toBe('Rs. 0.00');
     expect(formatAmount(-85000, { bare: true })).toBe('−850.00');
+    expect(formatAmount(10656000, { whole: true })).toBe('Rs. 106,560');
+    expect(formatAmount(545750, { whole: true })).toBe('Rs. 5,458');
   });
 
   it('formats compact amounts', () => {

@@ -1,5 +1,10 @@
 export { BreakdownRow } from './components/BreakdownRow';
 export { CarryRow } from './components/CarryRow';
+export { CategoryEntryRow } from './components/CategoryEntryRow';
+export { ChangeTag } from './components/ChangeTag';
+export { PaceCard } from './components/PaceCard';
 export { SummaryHeader } from './components/SummaryHeader';
-export { computeBreakdown, computeSummary, type MonthSummary } from './domain/computeSummary';
+export { CARRY_CATEGORY_ID, computeBreakdown, computeSummary, type MonthSummary } from './domain/computeSummary';
+export type { Change, Pace } from './domain/insights';
+export { useBreakdownInsights, type BreakdownInsights, type InsightRow } from './hooks/useBreakdownInsights';
 export { carryLabel, useCategoryBreakdown, useMonthSummary } from './hooks/useMonthSummary';
