@@ -66,6 +66,11 @@ export function formatMonth(month: MonthKey): string {
   return `${MONTHS[m - 1]} ${y}`;
 }
 
+/** "2026-10" -> "October" */
+export function monthName(month: MonthKey): string {
+  return MONTHS[Number(month.split('-')[1]) - 1];
+}
+
 /** "Today", "Yesterday", or "Sat, 7 Nov" (adds year if not the current year) */
 export function formatDayLabel(date: ISODate, today: ISODate = todayISO()): string {
   if (date === today) return 'Today';

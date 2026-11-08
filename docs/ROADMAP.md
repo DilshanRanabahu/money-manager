@@ -48,6 +48,10 @@ Build in this order. Each milestone ends with something usable on the phone.
 - In the light theme the Android navigation bar stays grey (seen in Expo Go); re-check in the standalone build.
 - Swipe left/right on the month title to change month (only arrows today).
 
+## Done after v1
+- [x] Carry last month's leftover into the new month as an automatic income entry (negative if overspent)
+- [x] Expense categories "AI subscriptions" and "API subscriptions"
+
 ## Later
 
 Pick from here only after a month of real use, based on what was actually missing.

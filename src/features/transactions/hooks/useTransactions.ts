@@ -14,23 +14,34 @@ const TABLES = ['transactions', 'categories'] as const;
 
 const EMPTY: never[] = [];
 const monthKey = (month: MonthKey) => `tx:month:${month}`;
+const carryKey = (month: MonthKey) => `tx:carry:${month}`;
+const carryFetch = (month: MonthKey) => () => transactionRepo.balanceBefore(`${month}-01`);
 
 /**
  * A month's transactions plus day groups, shared by every screen through the query cache.
+ * Also returns `carry`: what was left from all earlier months (computed, never stored).
  * Neighbouring months are prefetched so switching months is instant.
  */
 export function useMonthTransactions(month: MonthKey) {
   const { data, loading, error } = useQuery(monthKey(month), () => transactionRepo.findByMonth(month), TABLES);
+  const carryQuery = useQuery(carryKey(month), carryFetch(month), TABLES);
 
   useEffect(() => {
     for (const m of [addMonths(month, -1), addMonths(month, 1)]) {
       void queryCache.prefetch(monthKey(m), () => transactionRepo.findByMonth(m), TABLES);
+      void queryCache.prefetch(carryKey(m), carryFetch(m), TABLES);
     }
   }, [month]);
 
   const transactions = data ?? EMPTY;
   const days = useMemo(() => groupByDay(transactions), [transactions]);
-  return { transactions, days, loading, error };
+  return {
+    transactions,
+    days,
+    carry: carryQuery.data ?? 0,
+    loading: loading || carryQuery.loading,
+    error,
+  };
 }
 
 export function useTransaction(id: string | undefined) {

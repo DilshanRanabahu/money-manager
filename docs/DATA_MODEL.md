@@ -109,6 +109,8 @@ Seeded once on first launch (idempotent, by fixed IDs).
 | `transactionRepo.purgeDeleted(olderThanMs)` | —                                          |
 | `categoryRepo.findAll(type?)`            | active categories, ordered by `sort_order`    |
 
+**Carry-over** is never stored. `transactionRepo.balanceBefore('YYYY-MM-01')` sums income − expense of every non-deleted row before the month; `computeSummary(rows, carry)` adds a positive carry to income and a negative one to expense, and `computeBreakdown` shows it as a pseudo-category (`id: 'carry'`). Because it is derived, editing or deleting any earlier entry updates every later month.
+
 Summaries (income, expense, balance, per-category totals, per-day totals) are computed by pure functions in `features/summary/domain` from the month's rows. A month is small (hundreds of rows), so this is fast and keeps logic testable. If it ever gets slow, move the sums into SQL `GROUP BY` queries in the repository without changing the hooks.
 
 ## Backup format

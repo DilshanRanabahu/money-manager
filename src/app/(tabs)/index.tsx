@@ -9,7 +9,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 
-import { computeSummary, SummaryHeader } from '@/features/summary';
+import { CarryRow, carryLabel, computeSummary, SummaryHeader } from '@/features/summary';
 import {
   DayHeader,
   TransactionRow,
@@ -32,13 +32,14 @@ const rowEnter = FadeIn.duration(220);
 
 type Item =
   | { kind: 'day'; key: string; date: string; net: number }
-  | { kind: 'tx'; key: string; tx: TransactionWithCategory };
+  | { kind: 'tx'; key: string; tx: TransactionWithCategory }
+  | { kind: 'carry'; key: string; amount: number; label: string };
 
 export default function HomeScreen() {
   const month = useUiStore((s) => s.month);
   const direction = useUiStore((s) => s.monthDirection);
-  const { transactions, days, loading } = useMonthTransactions(month);
-  const summary = useMemo(() => computeSummary(transactions), [transactions]);
+  const { transactions, days, carry, loading } = useMonthTransactions(month);
+  const summary = useMemo(() => computeSummary(transactions, carry), [transactions, carry]);
 
   return (
     <Screen>
@@ -66,7 +67,13 @@ export default function HomeScreen() {
         {/* skipExiting: when the month changes, the old list goes away at once
             instead of every row fading out over the new month. */}
         <LayoutAnimationConfig skipExiting>
-          <MonthList month={month} days={days} loading={loading} header={<SummaryHeader summary={summary} />} />
+          <MonthList
+            month={month}
+            days={days}
+            carry={carry}
+            loading={loading}
+            header={<SummaryHeader summary={summary} />}
+          />
         </LayoutAnimationConfig>
       </Animated.View>
     </Screen>
@@ -76,6 +83,8 @@ export default function HomeScreen() {
 type MonthListProps = {
   month: MonthKey;
   days: DayGroup<TransactionWithCategory>[];
+  /** Signed carry-over from earlier months (0 = none). */
+  carry: number;
   loading: boolean;
   header: React.ReactElement;
 };
@@ -84,7 +93,7 @@ type MonthListProps = {
  * One month's list. Rows that were already there when the month opened render without
  * an entering animation (fast month switching); rows added later fade in.
  */
-const MonthList = memo(function MonthList({ days, loading, header }: MonthListProps) {
+const MonthList = memo(function MonthList({ month, days, carry, loading, header }: MonthListProps) {
   const { spacing } = useTheme();
   const { remove } = useTransactionActions();
   const today = todayISO();
@@ -98,18 +107,29 @@ const MonthList = memo(function MonthList({ days, loading, header }: MonthListPr
 
   const items = useMemo(() => {
     const out: Item[] = [];
+    const firstDay = `${month}-01`;
     for (const d of days) {
-      out.push({ kind: 'day', key: `day-${d.date}`, date: d.date, net: d.net });
+      // The carry-over belongs to the 1st of the month, so it counts in that day's total.
+      const net = d.date === firstDay ? d.net + carry : d.net;
+      out.push({ kind: 'day', key: `day-${d.date}`, date: d.date, net });
       for (const t of d.items) out.push({ kind: 'tx', key: t.id, tx: t });
     }
+    if (carry !== 0) {
+      // Newest first, so the 1st is the last group; create it if the 1st has no entries.
+      if (days[days.length - 1]?.date !== firstDay) {
+        out.push({ kind: 'day', key: `day-${firstDay}`, date: firstDay, net: carry });
+      }
+      out.push({ kind: 'carry', key: 'carry', amount: carry, label: carryLabel(month) });
+    }
     return out;
-  }, [days]);
+  }, [days, carry, month]);
 
   const openEntry = useCallback((id: string) => router.push({ pathname: '/transaction/[id]', params: { id } }), []);
 
   const renderItem = useCallback(
     ({ item }: { item: Item }) => {
       if (item.kind === 'day') return <DayHeader date={item.date} net={item.net} today={today} />;
+      if (item.kind === 'carry') return <CarryRow amount={item.amount} label={item.label} />;
       const isNew = initialIds !== null && !initialIds.has(item.tx.id);
       return (
         // No exiting animation: a swiped row has already slid out by itself.

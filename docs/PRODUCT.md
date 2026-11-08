@@ -37,6 +37,7 @@ A personal app that answers three questions, fast:
 - **Summary card**: Income, Expense, Balance (Income − Expense) for the selected month.
 - **Day-grouped list**: each day shows a header with that day's net total, then its entries, newest first.
 - Empty state for a month with no entries.
+- **Carry-over**: what was left at the end of the previous month appears automatically as the first entry of the month ("From October +6,080", on the 1st) and counts as income. If the previous months were overspent, it shows as a negative amount and counts as expense. It is calculated, not stored, so it cannot be edited directly; editing an old entry updates it.
 
 ### 4. Categories
 - Ship with a default set (see [DATA_MODEL.md](DATA_MODEL.md#default-categories)).

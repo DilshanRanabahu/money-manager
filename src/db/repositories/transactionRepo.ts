@@ -72,6 +72,16 @@ export const transactionRepo = {
     return rows.map(toJoined);
   },
 
+  /** Income minus expense of everything before `date` (the carry-over into that month). */
+  async balanceBefore(date: string): Promise<number> {
+    const row = await getDb().getFirstAsync<{ balance: number | null }>(
+      `SELECT SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) AS balance
+       FROM transactions WHERE deleted_at IS NULL AND occurred_on < ?`,
+      date,
+    );
+    return row?.balance ?? 0;
+  },
+
   async findById(id: string): Promise<TransactionWithCategory | null> {
     const row = await getDb().getFirstAsync<JoinedRow>(
       `${JOINED_SELECT} WHERE t.id = ? AND t.deleted_at IS NULL`,
