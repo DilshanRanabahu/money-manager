@@ -50,7 +50,15 @@ A personal app that answers three questions, fast:
 - **Spending pace** (Spending tab): average per day. For the current month also an estimate for the month end: what has been spent so far plus what was spent in the rest of last month (falls back to a straight line if last month is empty), with a note whether it fits the money available this month (income + carry-over).
 - **Tap a category** to see its entries for the month, biggest first; tap an entry to edit it.
 
-### 6. Backup
+### 6. App lock (Settings → Security)
+- Optional. Turning it on **and** off asks for the fingerprint first, so nobody else can switch it off.
+- Needs a fingerprint or a phone screen lock; if the phone has neither, it says so.
+- When on: the app opens on a lock screen and asks for the fingerprint right away. The phone's PIN / pattern always works as a fallback, so the owner is never locked out.
+- Locks again after leaving the app: **Immediately**, **1 min** or **5 min** (choice under the switch).
+- While the app is in the background its content is hidden, so recent apps show no amounts.
+- Opening the share sheet or file picker from the app does not trigger the lock.
+
+### 7. Backup
 - Export all data to a JSON file (share sheet).
 - Import from that JSON file.
 

@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DbProvider } from '@/db/DbProvider';
+import { AppLockOverlay, useAppLockLifecycle } from '@/features/security';
 import { transactionService } from '@/features/transactions';
 import { ThemeProvider, useTheme } from '@/shared/theme/ThemeProvider';
 import { Button } from '@/shared/ui/Button';
@@ -13,6 +14,7 @@ import { Text } from '@/shared/ui/Text';
 import { ToastHost } from '@/shared/ui/ToastHost';
 
 export default function RootLayout() {
+  useAppLockLifecycle();
   return (
     <GestureHandlerRootView style={styles.fill}>
       <ThemeProvider>
@@ -25,6 +27,8 @@ export default function RootLayout() {
             <RootStack />
           </DbProvider>
           <ToastHost />
+          {/* Last, so it covers everything above (when app lock is on). */}
+          <AppLockOverlay />
         </Themed>
       </ThemeProvider>
     </GestureHandlerRootView>

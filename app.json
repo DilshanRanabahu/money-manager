@@ -25,7 +25,13 @@
       "expo-router",
       "expo-sqlite",
       "expo-sharing",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Money to use Face ID to unlock the app."
+        }
+      ]
     ],
     "scheme": "moneymanager",
     "experiments": {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 import { exportBackup, pickBackup, restoreBackup } from '@/features/backup';
+import { AppLockSettings, withoutLocking } from '@/features/security';
 import { haptics } from '@/shared/lib/haptics';
 import { useSettingsStore, type ThemePreference } from '@/shared/store/settingsStore';
 import { useUiStore } from '@/shared/store/uiStore';
@@ -29,14 +30,15 @@ export default function SettingsScreen() {
 
   const onExport = async () => {
     setBusy('export');
-    const r = await exportBackup();
+    // The share sheet leaves the app; don't lock on the way back.
+    const r = await withoutLocking(exportBackup);
     setBusy(null);
     if (!r.ok) showToast({ message: r.error });
   };
 
   const onImport = async () => {
     setBusy('import');
-    const picked = await pickBackup();
+    const picked = await withoutLocking(pickBackup);
     setBusy(null);
     if (!picked.ok) {
       haptics.warning();
@@ -76,6 +78,10 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.xl }}>
         <Section title="Appearance">
           <SegmentedControl<ThemePreference> options={THEME_OPTIONS} value={theme} onChange={setTheme} />
+        </Section>
+
+        <Section title="Security">
+          <AppLockSettings />
         </Section>
 
         <Section title="Backup">

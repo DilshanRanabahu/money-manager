@@ -66,6 +66,12 @@ money-manager/
 │   │   │   ├── hooks/            # useCategories
 │   │   │   ├── domain/           # defaults.ts, types.ts
 │   │   │   └── index.ts
+│   │   ├── security/
+│   │   │   ├── domain/           # lockPolicy.ts (when to lock again; pure, tested)
+│   │   │   ├── services/         # biometrics.ts (expo-local-authentication wrapper)
+│   │   │   ├── store/            # lockStore.ts (locked / covered / busy), withoutLocking()
+│   │   │   ├── hooks/            # useAppLockLifecycle (AppState), useUnlock
+│   │   │   └── components/       # AppLockOverlay (root, above everything), AppLockSettings
 │   │   └── backup/
 │   │       ├── services/         # exportData.ts, importData.ts
 │   │       ├── domain/           # backupSchema.ts (Zod)
