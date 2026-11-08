@@ -1,4 +1,3 @@
-import * as DocumentPicker from 'expo-document-picker';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
@@ -35,13 +34,12 @@ export async function exportBackup(): Promise<Result<{ count: number }>> {
 /** Let the user pick a backup file and validate it. Does not write anything yet. */
 export async function pickBackup(): Promise<Result<Backup | null>> {
   try {
-    const picked = await DocumentPicker.getDocumentAsync({
-      type: ['application/json', 'text/plain', '*/*'],
-      copyToCacheDirectory: true,
-    });
-    if (picked.canceled || !picked.assets?.[0]) return ok(null);
+    // expo-file-system's own picker returns a File the app is allowed to read.
+    // (expo-document-picker's cached copy was rejected by File.text() in Expo Go.)
+    const picked = await File.pickFileAsync({ mimeTypes: ['application/json', 'text/plain', '*/*'] });
+    if (picked.canceled || !picked.result) return ok(null);
 
-    const text = await new File(picked.assets[0].uri).text();
+    const text = await picked.result.text();
     let json: unknown;
     try {
       json = JSON.parse(text);

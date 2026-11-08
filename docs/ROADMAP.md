@@ -31,12 +31,12 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Animations in [MOTION.md](MOTION.md) and haptics
 - [x] Reduce Motion support, accessibility labels
 
-## Milestone 4 — Breakdown & backup (built, needs a check on the phone)
+## Milestone 4 — Breakdown & backup ✅
 - [x] Breakdown screen with animated bars
 - [x] Export to JSON / import from JSON
 - [x] Settings screen (theme override, version)
-- [ ] Test export → import round trip on the device
-- [ ] Check the light theme on the device
+- [x] Test export → import round trip on the device (import uses `File.pickFileAsync`; expo-document-picker's cached file was not readable in Expo Go)
+- [x] Check the light theme on the device
 
 ## Milestone 5 — Release for myself
 - [ ] App icon and splash
@@ -45,6 +45,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 
 ## Known issues / follow-ups
 - Sticky day headers are off: on RN 0.88 / Android they stopped list rows from rendering.
+- In the light theme the Android navigation bar stays grey (seen in Expo Go); re-check in the standalone build.
 - Swipe left/right on the month title to change month (only arrows today).
 
 ## Later
