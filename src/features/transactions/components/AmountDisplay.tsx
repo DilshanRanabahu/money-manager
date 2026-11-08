@@ -51,26 +51,31 @@ export function AmountDisplay({ raw, type, shakeKey }: Props) {
   const tone = useDerivedValue(() => withTiming(type === 'income' ? 1 : 0, { duration: duration.base }));
   const empty = raw === '';
 
-  const style = useAnimatedStyle(() => ({
-    color: empty ? colors.textFaint : interpolateColor(tone.value, [0, 1], [colors.text, colors.income]),
+  const motion = useAnimatedStyle(() => ({
     transform: [{ translateX: shake.value }, { scale: scale.value }],
   }));
+  const tint = useAnimatedStyle(() => ({
+    color: empty ? colors.textFaint : interpolateColor(tone.value, [0, 1], [colors.text, colors.income]),
+  }));
 
+  // Symbol and number are separate Text nodes: nested Text on Android clipped the comma glyphs.
   return (
-    <Animated.Text
+    <Animated.View
+      accessible
       accessibilityRole="text"
       accessibilityLabel={`Amount ${formatInput(raw)} rupees`}
-      adjustsFontSizeToFit
-      numberOfLines={1}
-      style={[typography.display, styles.text, style]}
+      style={[styles.row, motion]}
     >
-      <Animated.Text style={[typography.title, styles.symbol]}>{CURRENCY_SYMBOL} </Animated.Text>
-      {formatInput(raw)}
-    </Animated.Text>
+      <Animated.Text style={[typography.title, styles.symbol, tint]}>{CURRENCY_SYMBOL}</Animated.Text>
+      <Animated.Text numberOfLines={1} style={[typography.display, styles.number, tint]}>
+        {formatInput(raw)}
+      </Animated.Text>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  text: { textAlign: 'center', fontVariant: ['tabular-nums'] },
+  row: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 },
   symbol: { fontWeight: '500' },
+  number: { fontVariant: ['tabular-nums'], lineHeight: 56, flexShrink: 1 },
 });

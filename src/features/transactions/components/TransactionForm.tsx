@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -46,7 +46,7 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [date, setDate] = useState<ISODate>(initial?.occurredOn ?? todayISO());
   const [note, setNote] = useState(initial?.note ?? '');
-  const [noteOpen, setNoteOpen] = useState(Boolean(initial?.note));
+  const [noteFocused, setNoteFocused] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -90,6 +90,7 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
   };
 
   const save = async () => {
+    Keyboard.dismiss();
     if (!isValid) {
       haptics.warning();
       setShakeKey((k) => k + 1);
@@ -142,40 +143,35 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
         <View style={styles.flex}>
           <DateStepper value={date} onChange={setDate} />
         </View>
-        {noteOpen ? (
-          <Animated.View entering={FadeIn.duration(150)} style={styles.flex}>
-            <TextInput
-              autoFocus={!initial?.note}
-              value={note}
-              onChangeText={setNote}
-              maxLength={MAX_NOTE_LENGTH}
-              placeholder="Note"
-              placeholderTextColor={colors.textFaint}
-              returnKeyType="done"
-              style={[
-                typography.caption,
-                styles.note,
-                { backgroundColor: colors.surfaceMuted, borderRadius: radius.md, color: colors.text },
-              ]}
-            />
-          </Animated.View>
-        ) : (
-          <PressableScale
-            onPress={() => setNoteOpen(true)}
-            accessibilityLabel="Add a note"
-            style={[styles.flex, styles.addNote, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}
-          >
-            <Icon name="create-outline" size={16} color="textMuted" />
-            <Text variant="caption" color="textMuted" style={styles.bold}>
-              Add note
-            </Text>
-          </PressableScale>
-        )}
+        {/* Always a real input: one tap opens the keyboard. */}
+        <View style={[styles.flex, styles.noteBox, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}>
+          <Icon name="create-outline" size={16} color={noteFocused || note ? 'text' : 'textMuted'} />
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            onFocus={() => setNoteFocused(true)}
+            onBlur={() => setNoteFocused(false)}
+            maxLength={MAX_NOTE_LENGTH}
+            placeholder="Add note"
+            placeholderTextColor={colors.textMuted}
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
+            accessibilityLabel="Note"
+            style={[typography.caption, styles.noteInput, { color: colors.text }]}
+          />
+        </View>
       </View>
 
-      <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.md }}>
-        <AmountPad onKey={onKey} />
-      </View>
+      {/* While typing a note, hide the number pad so Save sits right above the keyboard. */}
+      {!noteFocused && (
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+          style={{ paddingHorizontal: spacing.md, marginTop: spacing.md }}
+        >
+          <AmountPad onKey={onKey} />
+        </Animated.View>
+      )}
 
       <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
         <Button label={initial ? 'Save changes' : 'Save'} onPress={save} disabled={!isValid || saving} />
@@ -190,7 +186,6 @@ const styles = StyleSheet.create({
   iconButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
   metaRow: { flexDirection: 'row' },
   flex: { flex: 1 },
-  note: { height: 44, paddingHorizontal: 12 },
-  addNote: { height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  bold: { fontWeight: '600' },
+  noteBox: { height: 44, flexDirection: 'row', alignItems: 'center', paddingLeft: 12, gap: 6 },
+  noteInput: { flex: 1, height: 44, paddingVertical: 0, paddingRight: 12, fontWeight: '600' },
 });
