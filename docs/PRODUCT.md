@@ -1,0 +1,63 @@
+# Product
+
+## Problem
+
+Salary arrives, and by the end of the month it is gone with no clear picture of where it went. Existing apps do too much, push subscriptions, or want an account and cloud sync.
+
+## Goal
+
+A personal app that answers three questions, fast:
+
+1. **How much came in** this month?
+2. **How much went out**, and on what?
+3. **How much is left**?
+
+## Principles
+
+- **Fast entry beats rich entry.** Adding an expense must take under 5 seconds: open, type amount, pick category, save.
+- **Offline and private.** All data lives on the device. No account, no server.
+- **Calm UI.** Minimal, readable, no clutter. Motion explains changes; it never decorates.
+- **Small and correct.** Fewer features, each done well. Money math is always exact.
+
+## MVP scope (v1)
+
+### 1. Add a transaction
+- Type: **Income** or **Expense** (toggle; default Expense).
+- **Amount** (required, > 0), entered with a large custom number pad.
+- **Category** (required), picked from a chip grid.
+- **Date** (defaults to today; can change).
+- **Note** (optional, one line).
+
+### 2. Edit / delete a transaction
+- Tap a row to edit.
+- Swipe a row left to delete, with an **Undo** toast (no confirm dialog).
+
+### 3. Home: the month view
+- Month switcher at the top (arrows; tap the title to jump to the current month).
+- **Summary card**: Income, Expense, Balance (Income − Expense) for the selected month.
+- **Day-grouped list**: each day shows a header with that day's net total, then its entries, newest first.
+- Empty state for a month with no entries.
+
+### 4. Categories
+- Ship with a default set (see [DATA_MODEL.md](DATA_MODEL.md#default-categories)).
+- v1: categories are fixed (no add/edit UI yet).
+
+### 5. Breakdown
+- A simple per-category list for the selected month: category, amount, % of total expense, a thin bar.
+- This is the "where did my money go" answer. No pie charts.
+
+### 6. Backup
+- Export all data to a JSON file (share sheet).
+- Import from that JSON file.
+
+## Not in v1 (on purpose)
+
+Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · notifications · widgets · receipt photos · custom categories.
+
+These live in [ROADMAP.md](ROADMAP.md#later). We only add one when v1 is used daily and the need is real.
+
+## Defaults
+
+- Currency: **LKR** (Rs.), shown as `Rs. 12,500.00`.
+- Week starts Monday. Month = calendar month.
+- Theme follows the system (light / dark).

@@ -1,0 +1,62 @@
+# Roadmap
+
+Build in this order. Each milestone ends with something usable on the phone.
+
+## Milestone 0 — Foundation ✅
+- [x] Create Expo app (SDK 58) with TypeScript and Expo Router (`src/app`)
+- [x] Add `@/` path alias, ESLint, Jest (`jest-expo`)
+- [x] Install Reanimated, Gesture Handler, expo-haptics, expo-sqlite, Zustand, Zod, Ionicons
+- [x] Theme: tokens, `ThemeProvider`, light/dark following system
+- [x] Motion tokens and `useReducedMotion`
+- [x] Base UI: `Screen`, `Text`, `PressableScale`, `Button`
+- [x] Folder structure from [ARCHITECTURE.md](ARCHITECTURE.md)
+
+## Milestone 1 — Data layer ✅
+- [x] `money.ts` and `dates.ts` with full unit tests
+- [x] SQL migrations, DB provider with splash while migrating
+- [x] Seed default categories
+- [x] Repositories + transaction service with Zod validation
+- [x] Service tests with in-memory fakes
+
+## Milestone 2 — Add & list ✅ (first usable version)
+- [x] Add sheet: type toggle, amount pad, category chips, date, note
+- [x] Home: summary (income / expense / balance) + day-grouped list
+- [x] Month switcher (arrows; tap title for current month)
+- [x] Empty state
+- **Goal:** start logging real expenses daily from here.
+
+## Milestone 3 — Edit, delete, polish ✅
+- [x] Edit transaction
+- [x] Swipe to delete + Undo toast + purge on start
+- [x] Animations in [MOTION.md](MOTION.md) and haptics
+- [x] Reduce Motion support, accessibility labels
+
+## Milestone 4 — Breakdown & backup (built, needs a check on the phone)
+- [x] Breakdown screen with animated bars
+- [x] Export to JSON / import from JSON
+- [x] Settings screen (theme override, version)
+- [ ] Test export → import round trip on the device
+- [ ] Check the light theme on the device
+
+## Milestone 5 — Release for myself
+- [ ] App icon and splash
+- [ ] Standalone Android build (EAS build or `npx expo run:android`), so Expo Go is not needed
+- [ ] Use it for a full month; write down what was annoying
+
+## Known issues / follow-ups
+- Sticky day headers are off: on RN 0.88 / Android they stopped list rows from rendering.
+- Swipe left/right on the month title to change month (only arrows today).
+
+## Later
+
+Pick from here only after a month of real use, based on what was actually missing.
+
+- Custom categories (add / rename / reorder / archive)
+- Monthly budget per category with gentle warnings
+- Recurring transactions (rent, subscriptions)
+- Simple charts (daily spending trend)
+- Search and filters
+- Multiple wallets (cash, bank, card)
+- Home screen widget for quick add
+- Cloud backup / sync (repository layer is the only place to change)
+- Reminders ("You haven't logged today")
