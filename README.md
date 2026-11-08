@@ -11,7 +11,7 @@ The goal is **clarity, not features**: open the app, add an entry in under 5 sec
 | Framework      | React Native with **Expo** (managed workflow)           |
 | Language       | **TypeScript** (strict)                                 |
 | Navigation     | **Expo Router** (file-based)                            |
-| Local database | **expo-sqlite** (typed repositories, SQL migrations, live queries via change listener) |
+| Local database | **expo-sqlite** (typed repositories, SQL migrations, small shared query cache) |
 | UI state       | **Zustand** (small, transient UI state only)            |
 | Animation      | **React Native Reanimated** + **Gesture Handler**       |
 | Haptics        | **expo-haptics**                                        |

@@ -1,8 +1,9 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
+import { queryCache } from '@/db/queryCache';
 import { transactionRepo } from '@/db/repositories/transactionRepo';
-import { useLiveQuery } from '@/db/useLiveQuery';
-import type { MonthKey } from '@/shared/lib/dates';
+import { useQuery } from '@/db/useQuery';
+import { addMonths, type MonthKey } from '@/shared/lib/dates';
 import { haptics } from '@/shared/lib/haptics';
 import { useUiStore } from '@/shared/store/uiStore';
 import { groupByDay } from '../domain/groupByDay';
@@ -11,19 +12,32 @@ import { transactionService } from '../services/instance';
 
 const TABLES = ['transactions', 'categories'] as const;
 
-/** Live list of a month's transactions plus day groups. */
+const EMPTY: never[] = [];
+const monthKey = (month: MonthKey) => `tx:month:${month}`;
+
+/**
+ * A month's transactions plus day groups, shared by every screen through the query cache.
+ * Neighbouring months are prefetched so switching months is instant.
+ */
 export function useMonthTransactions(month: MonthKey) {
-  const { data, loading, error } = useLiveQuery(() => transactionRepo.findByMonth(month), TABLES, [month]);
-  const transactions = useMemo(() => data ?? [], [data]);
+  const { data, loading, error } = useQuery(monthKey(month), () => transactionRepo.findByMonth(month), TABLES);
+
+  useEffect(() => {
+    for (const m of [addMonths(month, -1), addMonths(month, 1)]) {
+      void queryCache.prefetch(monthKey(m), () => transactionRepo.findByMonth(m), TABLES);
+    }
+  }, [month]);
+
+  const transactions = data ?? EMPTY;
   const days = useMemo(() => groupByDay(transactions), [transactions]);
   return { transactions, days, loading, error };
 }
 
 export function useTransaction(id: string | undefined) {
-  const { data, loading } = useLiveQuery(
+  const { data, loading } = useQuery(
+    `tx:id:${id ?? ''}`,
     () => (id ? transactionRepo.findById(id) : Promise.resolve(null)),
     TABLES,
-    [id],
   );
   return { transaction: data ?? null, loading };
 }

@@ -72,11 +72,12 @@ money-manager/
 │   │       └── index.ts
 │   │
 │   ├── db/
-│   │   ├── client.ts             # opens SQLite (change listener on)
+│   │   ├── client.ts             # opens SQLite
 │   │   ├── migrations.ts         # ordered SQL migrations (PRAGMA user_version)
 │   │   ├── seed.ts               # default categories (idempotent)
 │   │   ├── DbProvider.tsx        # migrate + seed before rendering the app
-│   │   ├── useLiveQuery.ts       # re-runs a query when its tables change
+│   │   ├── queryCache.ts         # shared per-key cache, invalidated by repositories
+│   │   ├── useQuery.ts           # React hook over queryCache (useSyncExternalStore)
 │   │   └── repositories/
 │   │       ├── transactionRepo.ts
 │   │       └── categoryRepo.ts
@@ -100,7 +101,7 @@ money-manager/
 
 ```
 SQLite ──► transactionRepo.findByMonth(month)
-             │  (useLiveQuery re-runs when the table changes)
+             │  cached per month in queryCache; neighbouring months are prefetched
              ▼
         useMonthTransactions(month)  ──► groupByDay()  (pure)
              │                       ──► computeSummary() (pure)
@@ -108,7 +109,12 @@ SQLite ──► transactionRepo.findByMonth(month)
         Home screen renders SummaryCard + day list
 ```
 
-The screen never refetches by hand. After a write, live queries update and the UI animates the change.
+The screen never refetches by hand. After a write, the repository calls `queryCache.invalidate([...tables])` once; watched queries refetch and the UI animates the change.
+
+Rules for the cache:
+- A key's data always belongs to that key. Switching months shows the new month (or a loading state), never the previous month's rows.
+- Home and Breakdown share one query per month.
+- Bulk writes (backup import) invalidate once after the transaction commits, so no screen reads half-imported data.
 
 ### Writing
 
@@ -123,7 +129,7 @@ transactionService.create(values)
    ├─ convert amount string → integer minor units (money.ts)
    └─ transactionRepo.insert(row)
    ▼
-SQLite changes → live queries re-run → UI updates
+repository → queryCache.invalidate(['transactions']) → watched queries refetch → UI updates
 ```
 
 Delete uses **soft delete + undo**: the service sets `deleted_at`, the toast offers Undo for ~4 s, then a cleanup hard-deletes rows older than that on next app start.
@@ -132,7 +138,7 @@ Delete uses **soft delete + undo**: the service sets `deleted_at`, the toast off
 
 | State                                  | Where                          |
 | -------------------------------------- | ------------------------------ |
-| Transactions, categories (persistent)  | SQLite, read via live queries  |
+| Transactions, categories (persistent)  | SQLite, read through `useQuery` / `queryCache` |
 | Theme preference, last used category   | `expo-sqlite/kv-store` via `settingsStore` |
 | Selected month, sheet open, toast      | Zustand `uiStore`              |
 | Form input while typing                | Local component state          |
@@ -159,6 +165,9 @@ No server-state library is needed: there is no server.
 | 7 | Reanimated for all motion | Runs on the UI thread, stays at 60 fps. |
 | 8 | Feature folders + public `index.ts` | Keeps features independent and easy to delete or extend. |
 | 9 | No sticky day headers | With RN 0.88 on Android, `stickyHeaderIndices` stopped list rows from rendering. Revisit on a later SDK. |
+| 11 | Own query cache instead of SQLite change listener | The listener fired once per row (an import of 139 rows caused 139 refetches mid-transaction) and returned the previous month's data while a new month loaded. Explicit invalidation from repositories is predictable and testable. |
+| 12 | Inactive tab frozen (`freezeOnBlur`); rows only animate when new | Month switch measured at ~160 ms on a Samsung A06 with 100+ rows. |
+| 13 | Light list rows (own swipe row, plain `Pressable`) instead of `ReanimatedSwipeable` + `PressableScale` | Each row had ~10 Reanimated objects; creating them while scrolling caused stutter. Mid-scroll stalls went from 6 to 0–3 per test (dev mode). `failOffsetY` hands vertical drags to the list immediately. |
 | 10 | Service wired with injected ports | `createTransactionService({ transactions, categories })` lets tests use in-memory fakes; `services/instance.ts` wires the real repos. |
 
 When a decision changes, update this table and say why.

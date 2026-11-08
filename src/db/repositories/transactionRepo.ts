@@ -1,7 +1,12 @@
 import type { Transaction, TransactionWithCategory } from '@/features/transactions/domain/types';
 import { monthRange, type MonthKey } from '@/shared/lib/dates';
 import { getDb } from '../client';
+import { queryCache } from '../queryCache';
+import { seed } from '../seed';
 import { toCategory, type CategoryRow } from './categoryRepo';
+
+/** Tell every screen that transactions changed (once per write). */
+const changed = () => queryCache.invalidate(['transactions']);
 
 export type TransactionRow = {
   id: string;
@@ -81,6 +86,7 @@ export const transactionRepo = {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       t.id, t.type, t.amount, t.categoryId, t.note, t.occurredOn, t.createdAt, t.updatedAt,
     );
+    changed();
   },
 
   async update(t: Transaction): Promise<void> {
@@ -89,18 +95,22 @@ export const transactionRepo = {
        WHERE id = ?`,
       t.type, t.amount, t.categoryId, t.note, t.occurredOn, t.updatedAt, t.id,
     );
+    changed();
   },
 
   async softDelete(id: string, at: number): Promise<void> {
     await getDb().runAsync('UPDATE transactions SET deleted_at = ? WHERE id = ?', at, id);
+    changed();
   },
 
   async restore(id: string): Promise<void> {
     await getDb().runAsync('UPDATE transactions SET deleted_at = NULL WHERE id = ?', id);
+    changed();
   },
 
   async purgeDeleted(olderThan: number): Promise<void> {
     await getDb().runAsync('DELETE FROM transactions WHERE deleted_at IS NOT NULL AND deleted_at < ?', olderThan);
+    changed();
   },
 
   async allRows(): Promise<TransactionRow[]> {
@@ -130,5 +140,9 @@ export const transactionRepo = {
         );
       }
     });
+    // An older backup may not have newer default categories (e.g. AI subscriptions): add them back.
+    await seed(db);
+    // One refresh after the whole import has committed (not once per row).
+    queryCache.invalidate(['transactions', 'categories']);
   },
 };

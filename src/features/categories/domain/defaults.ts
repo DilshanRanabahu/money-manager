@@ -13,6 +13,9 @@ const expense: Seed[] = [
   { id: 'exp_education', name: 'Education', type: 'expense', icon: 'school-outline', color: 'purple' },
   { id: 'exp_fun', name: 'Entertainment', type: 'expense', icon: 'film-outline', color: 'pink' },
   { id: 'exp_family', name: 'Family', type: 'expense', icon: 'people-outline', color: 'orange' },
+  // Added in schema v2
+  { id: 'exp_ai_subs', name: 'AI subscriptions', type: 'expense', icon: 'sparkles-outline', color: 'purple' },
+  { id: 'exp_api_subs', name: 'API subscriptions', type: 'expense', icon: 'code-slash-outline', color: 'teal' },
   { id: 'exp_other', name: 'Other', type: 'expense', icon: 'ellipsis-horizontal', color: 'gray' },
 ];
 

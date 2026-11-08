@@ -107,7 +107,7 @@ One icon set only: **Ionicons** (outline variants) via `@expo/vector-icons`, 16â
 
 - Opens with amount focused; the custom pad avoids the system keyboard jumping.
 - The last used category is pre-selected for faster entry.
-- Save gives a success haptic and the sheet closes; the new row animates into the list.
+- Save closes the sheet; the new row animates into the list. (No vibration: haptics are off.)
 
 ### Breakdown
 

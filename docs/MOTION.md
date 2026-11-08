@@ -8,7 +8,7 @@ Motion in this app has one job: **show what changed and where it went.** If an a
 2. **Physical.** Use springs for anything the user moves (sheets, swipes, toggles). Use timing curves only for fades and color.
 3. **Interruptible.** A gesture can grab an element mid-animation. Reanimated shared values make this natural.
 4. **On the UI thread.** All animation uses Reanimated worklets. No `Animated` from React Native core, no JS-driven `setInterval` animation.
-5. **Paired with haptics** for confirmations, never for decoration.
+5. **No vibration.** Haptics are turned off (owner's preference); motion alone confirms actions. The calls stay in code behind `HAPTICS_ON` in `src/shared/lib/haptics.ts`.
 6. **Reduce Motion respected.** When the OS setting is on, replace movement with short fades and skip number rolling.
 
 ## Tokens (`src/shared/motion`)
@@ -42,21 +42,23 @@ Tune these in one place. Components never invent their own numbers.
 
 | # | Where | What happens | How |
 |---|-------|--------------|-----|
-| 1 | Any pressable | Scales to 0.97 on press in, springs back on release | `PressableScale`, `spring.snappy` |
+| 1 | Buttons, chips, keys | Scale to 0.97 on press in, spring back on release. List rows only tint their background (no per-row animation, for smooth scrolling) | `PressableScale`, `spring.snappy`; rows use plain `Pressable` |
 | 2 | Balance & totals | Number rolls from old to new value (~400 ms) when data or month changes | `AnimatedNumber`: shared value + `withTiming`, tabular digits |
 | 3 | Add button / tabs | Add button scales on press; active tab icon lifts 2 px and its dot springs in | `PressableScale`, `spring.snappy` |
 | 4 | Add/Edit sheet | Native form sheet slides up; drag down to dismiss | Expo Router `presentation: 'formSheet'` |
 | 5 | Type toggle | Indicator slides between Expense/Income; amount color cross-fades red↔green | `interpolateColor`, `spring.snappy` |
 | 6 | Amount input | Amount pops (1.04→1) on each new digit; invalid key shakes it with a warning haptic | `spring.bouncy`; shake = `withSequence` |
 | 7 | Category chip | Selected chip fills with its color and scales 1→1.05→1 | `spring.bouncy` + selection haptic |
-| 8 | Save | Success haptic; sheet closes; new row fades in and the balance / day totals roll | `entering={FadeIn}` + `AnimatedNumber` |
-| 9 | Delete | Swipe left reveals a red delete area (icon scales in); past threshold the row fades out, remaining rows spring into place; Undo toast slides in | `ReanimatedSwipeable` + `exiting` + `layout={LinearTransition}` on the row |
-| 10 | Month switch | Title and content slide in from the direction of travel (fade + small offset) | `FadeInRight` / `FadeInLeft`, keyed by month |
+| 8 | Save | Success haptic; sheet closes; the new row fades in (only rows added after the month opened animate) and the balance rolls | `entering={FadeIn}` + `AnimatedNumber`; day headers are plain text for speed |
+| 9 | Delete | Swipe left reveals a static red area; past 110 px (or a fast fling) the row slides out, remaining rows spring into place; Undo toast slides in | Own light swipe row: one `usePanGesture` + one shared value; `layout={LinearTransition}` on the row |
+| 10 | Month switch | Title and content slide in from the direction of travel (fade + small offset); the old month disappears at once | `FadeInRight` / `FadeInLeft` keyed by month, `LayoutAnimationConfig skipExiting` |
 | 11 | Breakdown bars | Bars grow from 0 to their width, staggered 30 ms per row | `withDelay` + `withTiming` |
 | 12 | Toast | Springs up from the bottom, auto-dismisses after 5 s, fades out | `SlideInDown` (gentle spring) + `FadeOutDown` |
 | 13 | Empty state | Icon fades and floats in once (no looping) | `FadeInDown` |
 
-## Haptics (`src/shared/lib/haptics.ts`)
+## Haptics (`src/shared/lib/haptics.ts`) — currently OFF
+
+All haptics are disabled with `HAPTICS_ON = false`. The table below is what each event would use if they are turned back on.
 
 | Event              | Haptic                    |
 | ------------------ | ------------------------- |

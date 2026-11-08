@@ -2,12 +2,13 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { formatDayLabel, type ISODate } from '@/shared/lib/dates';
+import { formatAmount } from '@/shared/lib/money';
 import { useTheme } from '@/shared/theme/ThemeProvider';
-import { AnimatedNumber } from '@/shared/ui/AnimatedNumber';
 import { Text } from '@/shared/ui/Text';
 
 type Props = { date: ISODate; net: number; today: ISODate };
 
+/** Plain text on purpose: a month can have 30+ headers, animated numbers here were costly. */
 function DayHeaderBase({ date, net, today }: Props) {
   const { colors, spacing } = useTheme();
   return (
@@ -15,7 +16,9 @@ function DayHeaderBase({ date, net, today }: Props) {
       <Text variant="micro" color="textMuted">
         {formatDayLabel(date, today)}
       </Text>
-      <AnimatedNumber value={net} variant="micro" color="textMuted" signed bare />
+      <Text variant="micro" color="textMuted" tabular>
+        {formatAmount(net, { signed: true, bare: true })}
+      </Text>
     </View>
   );
 }

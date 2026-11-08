@@ -93,7 +93,7 @@ export const transactions = sqliteTable('transactions', {
 
 Seeded once on first launch (idempotent, by fixed IDs).
 
-**Expense:** Food · Transport · Bills · Groceries · Shopping · Health · Education · Entertainment · Family · Other
+**Expense:** Food · Transport · Bills · Groceries · Shopping · Health · Education · Entertainment · Family · AI subscriptions · API subscriptions · Other (the two subscription categories were added in schema v2)
 
 **Income:** Salary · Overtime · Side income · Gift · Other
 

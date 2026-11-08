@@ -33,6 +33,31 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX idx_tx_occurred_on ON transactions (occurred_on);
   CREATE INDEX idx_tx_category ON transactions (category_id);
   `,
+
+  // v2 — new expense categories "AI subscriptions" and "API subscriptions" (inserted by seed),
+  // placed before "Other". Re-number the default categories to the new order.
+  // Must match DEFAULT_CATEGORIES (checked by migrations.test.ts).
+  `
+  UPDATE categories SET sort_order = CASE id
+    WHEN 'exp_food' THEN 0
+    WHEN 'exp_transport' THEN 1
+    WHEN 'exp_bills' THEN 2
+    WHEN 'exp_groceries' THEN 3
+    WHEN 'exp_shopping' THEN 4
+    WHEN 'exp_health' THEN 5
+    WHEN 'exp_education' THEN 6
+    WHEN 'exp_fun' THEN 7
+    WHEN 'exp_family' THEN 8
+    WHEN 'exp_ai_subs' THEN 9
+    WHEN 'exp_api_subs' THEN 10
+    WHEN 'exp_other' THEN 11
+    WHEN 'inc_salary' THEN 12
+    WHEN 'inc_overtime' THEN 13
+    WHEN 'inc_side' THEN 14
+    WHEN 'inc_gift' THEN 15
+    WHEN 'inc_other' THEN 16
+    ELSE sort_order END;
+  `,
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {
