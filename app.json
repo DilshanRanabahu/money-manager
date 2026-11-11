@@ -58,7 +58,17 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "backgroundColor": "#F7F7F5",
-          "dark": { "image": "./assets/splash-icon-dark.png", "backgroundColor": "#0E0E10" }
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#0E0E10"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Take a photo of a receipt so Ask Money can add it.",
+          "microphonePermission": false
         }
       ]
     ],

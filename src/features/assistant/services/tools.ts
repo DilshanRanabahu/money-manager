@@ -11,7 +11,7 @@ import { categoryHues } from '@/shared/theme/tokens';
 
 /**
  * Tools the assistant can call. They run on the phone against local data and return only
- * what the question needs. Writing (add_entry) always waits for the user to confirm.
+ * what the question needs. Every write (add, edit, delete) waits for the user to confirm.
  */
 
 export type SearchFilter = {
@@ -29,21 +29,31 @@ export type AssistantData = {
   search(f: SearchFilter): Promise<{ rows: TransactionWithCategory[]; total: number; count: number }>;
   categories(): Promise<Category[]>;
   addEntry(draft: TransactionDraft): Promise<Result<Transaction>>;
+  getEntry(id: string): Promise<TransactionWithCategory | null>;
+  updateEntry(id: string, draft: TransactionDraft): Promise<Result<Transaction>>;
+  deleteEntry(id: string): Promise<void>;
   addCategory(input: NewCategoryInput): Promise<Result<Category>>;
   today(): ISODate;
 };
 
-/** Something the assistant wants to save, shown to the user as a confirm card. */
+/** One entry as the assistant proposes it (already validated). */
+export type EntryItem = {
+  type: 'income' | 'expense';
+  amount: number; // minor units
+  category: Category;
+  date: ISODate;
+  note: string;
+};
+
+/** Something the assistant wants to change, shown to the user as a confirm card. */
 export type Proposal =
-  | {
-      kind: 'entry';
-      type: 'income' | 'expense';
-      amount: number; // minor units
-      category: Category;
-      date: ISODate;
-      note: string;
-    }
-  | { kind: 'category'; category: Category };
+  | { kind: 'entries'; items: EntryItem[] }
+  | { kind: 'category'; category: Category }
+  | { kind: 'update'; before: TransactionWithCategory; after: EntryItem }
+  | { kind: 'delete'; entry: TransactionWithCategory };
+
+/** Most entries one add_entries call may propose. */
+export const MAX_BATCH = 10;
 
 export type ConfirmFn = (p: Proposal) => Promise<boolean>;
 
@@ -63,13 +73,29 @@ const schemas = {
     limit: z.number().int().min(1).max(50).optional(),
   }),
   list_categories: z.object({}),
-  add_entry: z.object({
-    type,
-    amount: z.string().max(20),
-    category_id: z.string().max(60),
-    date,
+  add_entries: z.object({
+    entries: z
+      .array(
+        z.object({
+          type,
+          amount: z.string().max(20),
+          category_id: z.string().max(60),
+          date,
+          note: z.string().max(120).optional(),
+        }),
+      )
+      .min(1)
+      .max(MAX_BATCH),
+  }),
+  update_entry: z.object({
+    id: z.string().max(64),
+    type: type.optional(),
+    amount: z.string().max(20).optional(),
+    category_id: z.string().max(60).optional(),
+    date: date.optional(),
     note: z.string().max(120).optional(),
   }),
+  delete_entry: z.object({ id: z.string().max(64) }),
   add_category: z.object({
     name: z.string().max(60),
     type,
@@ -114,24 +140,55 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'list_categories',
-    description: 'All categories with their id, name and type. Call before add_entry or filtering by category.',
+    description: 'All categories with their id, name and type. Call before add_entries, update_entry or filtering by category.',
     input_schema: { type: 'object', properties: {} },
   },
   {
-    name: 'add_entry',
-    description:
-      'Propose a new entry. The app shows it to the user, who confirms or declines; the result says which. Use one call per entry. Never a future date.',
+    name: 'add_entries',
+    description: `Propose 1-${MAX_BATCH} new entries at once (e.g. "lunch 850, bus 160" or the lines of a receipt). The app shows them on one card; the user adds all or none, and the result says which. Never a future date.`,
     input_schema: {
       type: 'object',
       properties: {
-        type: typeProp,
-        amount: { type: 'string', description: 'Rupees, e.g. "850" or "1250.50"' },
-        category_id: { type: 'string', description: 'From list_categories, matching the type' },
-        date: { type: 'string', description: 'YYYY-MM-DD' },
-        note: { type: 'string', description: 'Short note, optional' },
+        entries: {
+          type: 'array',
+          maxItems: MAX_BATCH,
+          items: {
+            type: 'object',
+            properties: {
+              type: typeProp,
+              amount: { type: 'string', description: 'Rupees, e.g. "850" or "1250.50"' },
+              category_id: { type: 'string', description: 'From list_categories, matching the type' },
+              date: { type: 'string', description: 'YYYY-MM-DD' },
+              note: { type: 'string', description: 'Short note, optional (e.g. shop name)' },
+            },
+            required: ['type', 'amount', 'category_id', 'date'],
+          },
+        },
       },
-      required: ['type', 'amount', 'category_id', 'date'],
+      required: ['entries'],
     },
+  },
+  {
+    name: 'update_entry',
+    description:
+      'Propose changes to one existing entry (id from search_entries). Give only the fields that change. The user sees before/after and confirms.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        type: typeProp,
+        amount: { type: 'string' },
+        category_id: { type: 'string' },
+        date: { type: 'string', description: 'YYYY-MM-DD' },
+        note: { type: 'string', description: 'Use "" to clear' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'delete_entry',
+    description: 'Propose deleting one existing entry (id from search_entries). The user confirms, and can undo.',
+    input_schema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] },
   },
   {
     name: 'add_category',
@@ -153,6 +210,7 @@ export const TOOL_DEFINITIONS = [
 const money = (minor: number) => formatAmount(minor);
 
 const entryOut = (t: TransactionWithCategory) => ({
+  id: t.id,
   date: t.occurredOn,
   type: t.type,
   amount: money(t.amount),
@@ -200,6 +258,30 @@ export async function runTool(
 }
 
 type Out = { ok: boolean; value: unknown; card?: Card };
+
+type RawEntry = { type: 'income' | 'expense'; amount: string; category_id: string; date: ISODate; note?: string };
+
+/** Check one proposed entry against real categories and today. */
+export function resolveEntry(raw: RawEntry, categories: readonly Category[], today: ISODate): Result<EntryItem> {
+  const amount = parseAmount(raw.amount);
+  if (amount === null) return { ok: false, error: 'Amount must be a positive number like "850" or "1250.50".' };
+  if (raw.date > today) return { ok: false, error: 'Future dates are not allowed.' };
+  const category = categories.find((c) => c.id === raw.category_id && !c.isArchived);
+  if (!category) return { ok: false, error: 'Unknown category_id. Call list_categories.' };
+  if (category.type !== raw.type) return { ok: false, error: `Category "${category.name}" is for ${category.type}.` };
+  return { ok: true, value: { type: raw.type, amount, category, date: raw.date, note: (raw.note ?? '').trim() } };
+}
+
+const toDraft = (e: EntryItem): TransactionDraft => ({
+  type: e.type,
+  amountText: (e.amount / 100).toFixed(2),
+  categoryId: e.category.id,
+  occurredOn: e.date,
+  note: e.note,
+});
+
+const describe = (e: { type: string; amount: number; category: Category; date: ISODate }) =>
+  `${e.type} ${money(e.amount)} · ${e.category.name} · ${e.date}`;
 type Handler<K extends ToolName> = (a: z.infer<(typeof schemas)[K]>, d: AssistantData, c: ConfirmFn) => Promise<Out>;
 
 const handlers: { [K in ToolName]: Handler<K> } = {
@@ -276,27 +358,59 @@ const handlers: { [K in ToolName]: Handler<K> } = {
     };
   },
 
-  async add_entry(a, d, confirm) {
-    const amount = parseAmount(a.amount);
-    if (amount === null) return { ok: false, value: 'Amount must be a positive number like "850" or "1250.50".' };
-    if (a.date > d.today()) return { ok: false, value: 'Future dates are not allowed.' };
-    const category = (await d.categories()).find((c) => c.id === a.category_id && !c.isArchived);
-    if (!category) return { ok: false, value: 'Unknown category_id. Call list_categories.' };
-    if (category.type !== a.type) return { ok: false, value: `Category "${category.name}" is for ${category.type}.` };
+  async add_entries({ entries }, d, confirm) {
+    const cats = await d.categories();
+    const items: EntryItem[] = [];
+    for (const [i, raw] of entries.entries()) {
+      const v = resolveEntry(raw, cats, d.today());
+      if (!v.ok) return { ok: false, value: `Entry ${i + 1}: ${v.error} Nothing was shown to the user.` };
+      items.push(v.value);
+    }
+    if (!(await confirm({ kind: 'entries', items }))) return { ok: true, value: 'The user declined. Nothing was saved.' };
 
-    const note = (a.note ?? '').trim();
-    const accepted = await confirm({ kind: 'entry', type: a.type, amount, category, date: a.date, note });
-    if (!accepted) return { ok: true, value: 'The user declined. Nothing was saved.' };
+    const saved: string[] = [];
+    const failed: string[] = [];
+    for (const item of items) {
+      const res = await d.addEntry(toDraft(item));
+      if (res.ok) saved.push(describe(item));
+      else failed.push(`${describe(item)}: ${res.error}`);
+    }
+    return { ok: failed.length === 0, value: { saved, ...(failed.length ? { failed } : {}) } };
+  },
 
-    const saved = await d.addEntry({
-      type: a.type,
-      amountText: a.amount,
-      categoryId: category.id,
-      occurredOn: a.date,
-      note,
-    });
+  async update_entry(a, d, confirm) {
+    const before = await d.getEntry(a.id);
+    if (!before) return { ok: false, value: 'No entry with that id. Use search_entries to find it.' };
+    const raw: RawEntry = {
+      type: a.type ?? before.type,
+      amount: a.amount ?? (before.amount / 100).toFixed(2),
+      category_id: a.category_id ?? before.categoryId,
+      date: a.date ?? before.occurredOn,
+      note: a.note ?? before.note ?? '',
+    };
+    const v = resolveEntry(raw, await d.categories(), d.today());
+    if (!v.ok) return { ok: false, value: v.error };
+    const after = v.value;
+    const same =
+      after.type === before.type &&
+      after.amount === before.amount &&
+      after.category.id === before.categoryId &&
+      after.date === before.occurredOn &&
+      after.note === (before.note ?? '');
+    if (same) return { ok: false, value: 'Nothing would change.' };
+
+    if (!(await confirm({ kind: 'update', before, after }))) return { ok: true, value: 'The user declined. Nothing changed.' };
+    const saved = await d.updateEntry(before.id, toDraft(after));
     if (!saved.ok) return { ok: false, value: `Not saved: ${saved.error}` };
-    return { ok: true, value: `Saved: ${a.type} ${money(amount)} · ${category.name} · ${a.date}` };
+    return { ok: true, value: `Updated to: ${describe(after)}` };
+  },
+
+  async delete_entry({ id }, d, confirm) {
+    const entry = await d.getEntry(id);
+    if (!entry) return { ok: false, value: 'No entry with that id. Use search_entries to find it.' };
+    if (!(await confirm({ kind: 'delete', entry }))) return { ok: true, value: 'The user declined. Nothing was deleted.' };
+    await d.deleteEntry(id);
+    return { ok: true, value: `Deleted: ${describe({ ...entry, date: entry.occurredOn })}. The user can undo it from the card.` };
   },
 
   async add_category(a, d, confirm) {

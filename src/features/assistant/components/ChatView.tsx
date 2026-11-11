@@ -1,19 +1,18 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CategoryIcon } from '@/features/categories';
-import { formatDayLabel } from '@/shared/lib/dates';
-import { formatAmount } from '@/shared/lib/money';
+import { haptics } from '@/shared/lib/haptics';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
-import { Button } from '@/shared/ui/Button';
 import { Icon } from '@/shared/ui/Icon';
 import { PressableScale } from '@/shared/ui/PressableScale';
 import { Text } from '@/shared/ui/Text';
-import { useChat, type ChatItem } from '../hooks/useChat';
+import { useChat, type Attachment, type ChatItem } from '../hooks/useChat';
+import { pickImage } from '../services/receiptImage';
+import { ProposalCard } from './ProposalCard';
 import { RichText } from './RichText';
 import { ToolCard } from './ToolCard';
 import { TypingDots } from './TypingDots';
@@ -22,7 +21,7 @@ const SUGGESTIONS = [
   'How much did I spend this month?',
   'Where did most of my money go?',
   'Compare this month with last month',
-  'Lunch 850 today',
+  'Lunch 850, bus 160 today',
   'Add a Fuel expense category',
 ];
 
@@ -30,15 +29,36 @@ const SUGGESTIONS = [
 export function ChatView() {
   const { colors, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { items, busy, activity, send, respond } = useChat();
+  const { items, busy, activity, send, respond, undo } = useChat();
+  const showToast = useUiStore((s) => s.showToast);
   const [text, setText] = useState('');
+  const [image, setImage] = useState<Attachment | null>(null);
   const list = useRef<FlatList<ChatItem>>(null);
+  const canSend = !busy && (!!text.trim() || !!image);
 
   const submit = (value = text) => {
-    if (!value.trim() || busy) return;
+    if (busy || (!value.trim() && !image)) return;
     setText('');
-    void send(value);
+    setImage(null);
+    void send(value, image ?? undefined);
   };
+
+  const attach = (source: 'camera' | 'library') => async () => {
+    const r = await pickImage(source);
+    if (!r.ok) {
+      haptics.warning();
+      showToast({ message: r.error });
+      return;
+    }
+    if (r.value) setImage(r.value);
+  };
+
+  const chooseSource = () =>
+    Alert.alert('Add a receipt', 'The photo is sent to Claude only when you send the message.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Choose photo', onPress: attach('library') },
+      { text: 'Take photo', onPress: attach('camera') },
+    ]);
 
   return (
     <KeyboardAvoidingView
@@ -70,8 +90,21 @@ export function ChatView() {
             </Animated.View>
           ) : undefined
         }
-        renderItem={({ item }) => <Message item={item} onRespond={respond} />}
+        renderItem={({ item }) => <Message item={item} onRespond={respond} onUndo={undo} />}
       />
+
+      {image && (
+        <View style={[styles.preview, { paddingHorizontal: spacing.lg, paddingTop: spacing.sm }]}>
+          <Image source={{ uri: image.uri }} style={[styles.thumb, { borderRadius: radius.md }]} />
+          <PressableScale
+            onPress={() => setImage(null)}
+            accessibilityLabel="Remove photo"
+            style={[styles.remove, { backgroundColor: colors.surfaceMuted, borderRadius: radius.full }]}
+          >
+            <Icon name="close" size={14} />
+          </PressableScale>
+        </View>
+      )}
 
       <View
         style={[
@@ -85,10 +118,18 @@ export function ChatView() {
           },
         ]}
       >
+        <PressableScale
+          onPress={chooseSource}
+          disabled={busy}
+          accessibilityLabel="Add a receipt photo"
+          style={[styles.send, { backgroundColor: colors.surface, borderRadius: radius.full }]}
+        >
+          <Icon name="camera-outline" size={20} color="textMuted" />
+        </PressableScale>
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Ask about your money…"
+          placeholder={image ? 'Add a note (optional)…' : 'Ask about your money…'}
           placeholderTextColor={colors.textMuted}
           multiline
           maxLength={500}
@@ -101,11 +142,11 @@ export function ChatView() {
         />
         <PressableScale
           onPress={() => submit()}
-          disabled={busy || !text.trim()}
+          disabled={!canSend}
           accessibilityLabel="Send"
           style={[
             styles.send,
-            { backgroundColor: colors.accent, borderRadius: radius.full, opacity: busy || !text.trim() ? 0.35 : 1 },
+            { backgroundColor: colors.accent, borderRadius: radius.full, opacity: canSend ? 1 : 0.35 },
           ]}
         >
           <Icon name="arrow-up" size={20} color="onAccent" />
@@ -138,18 +179,29 @@ function Suggestions({ onPick }: { onPick: (s: string) => void }) {
   );
 }
 
-function Message({ item, onRespond }: { item: ChatItem; onRespond: (id: string, ok: boolean) => void }) {
-  const { colors, radius } = useTheme();
+function Message({
+  item,
+  onRespond,
+  onUndo,
+}: {
+  item: ChatItem;
+  onRespond: (id: string, ok: boolean) => void;
+  onUndo: (id: string, entryId: string) => void;
+}) {
+  const { colors, radius, spacing } = useTheme();
 
   if (item.kind === 'user') {
     return (
       <Animated.View
         entering={FadeInDown.duration(180)}
-        style={[styles.bubble, styles.mine, { backgroundColor: colors.accent, borderRadius: radius.lg }]}
+        style={[styles.bubble, styles.mine, { backgroundColor: colors.accent, borderRadius: radius.lg, gap: spacing.sm }]}
       >
-        <Text variant="body" color="onAccent">
-          {item.text}
-        </Text>
+        {item.imageUri && <Image source={{ uri: item.imageUri }} style={[styles.sent, { borderRadius: radius.md }]} />}
+        {!!item.text && (
+          <Text variant="body" color="onAccent">
+            {item.text}
+          </Text>
+        )}
       </Animated.View>
     );
   }
@@ -170,54 +222,7 @@ function Message({ item, onRespond }: { item: ChatItem; onRespond: (id: string, 
     );
   }
   if (item.kind === 'tool') return <ToolCard label={item.label} card={item.card} />;
-  return <ProposalCard item={item} onRespond={onRespond} />;
-}
-
-function ProposalCard({
-  item,
-  onRespond,
-}: {
-  item: Extract<ChatItem, { kind: 'proposal' }>;
-  onRespond: (id: string, ok: boolean) => void;
-}) {
-  const { colors, spacing, radius } = useTheme();
-  const today = useUiStore((s) => s.today);
-  const { proposal: p, status } = item;
-  return (
-    <Animated.View
-      entering={FadeInDown.duration(200)}
-      style={[styles.bubble, { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.md, width: '85%' }]}
-    >
-      <View style={[styles.cardRow, { gap: spacing.md }]}>
-        <CategoryIcon category={p.category} />
-        <View style={styles.fill}>
-          <Text variant="body" style={styles.bold}>
-            {p.category.name}
-          </Text>
-          <Text variant="caption" color="textMuted" numberOfLines={1}>
-            {p.kind === 'entry'
-              ? `${formatDayLabel(p.date, today)}${p.note ? ` · ${p.note}` : ''}`
-              : `New ${p.category.type} category`}
-          </Text>
-        </View>
-        {p.kind === 'entry' && (
-          <Text variant="body" tabular color={p.type === 'income' ? 'income' : 'text'} style={styles.bold}>
-            {formatAmount(p.type === 'income' ? p.amount : -p.amount, { signed: true })}
-          </Text>
-        )}
-      </View>
-      {status === 'pending' ? (
-        <View style={[styles.cardRow, { gap: spacing.sm }]}>
-          <Button label="Not now" variant="secondary" onPress={() => onRespond(item.id, false)} style={styles.fill} />
-          <Button label={p.kind === 'entry' ? 'Add entry' : 'Create'} onPress={() => onRespond(item.id, true)} style={styles.fill} />
-        </View>
-      ) : (
-        <Text variant="caption" color={status === 'saved' ? 'income' : 'textMuted'}>
-          {status === 'saved' ? (p.kind === 'entry' ? '✓ Added' : '✓ Created') : p.kind === 'entry' ? 'Not added' : 'Not created'}
-        </Text>
-      )}
-    </Animated.View>
-  );
+  return <ProposalCard item={item} onRespond={onRespond} onUndo={onUndo} />;
 }
 
 const styles = StyleSheet.create({
@@ -233,4 +238,8 @@ const styles = StyleSheet.create({
   composer: { flexDirection: 'row', alignItems: 'flex-end', borderTopWidth: StyleSheet.hairlineWidth },
   input: { flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 14, paddingTop: 11, paddingBottom: 11 },
   send: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  preview: { flexDirection: 'row' },
+  thumb: { width: 64, height: 64 },
+  remove: { position: 'absolute', top: 2, left: 54, width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  sent: { width: 180, height: 180 },
 });

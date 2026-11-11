@@ -23,6 +23,12 @@ export const assistantData: AssistantData = {
     if (r.ok) useUiStore.getState().setMonth(monthOf(r.value.occurredOn));
     return r;
   },
+  getEntry: (id) => transactionRepo.findById(id),
+  updateEntry: (id, draft) => transactionService.update(id, draft),
+  deleteEntry: (id) => transactionService.remove(id),
   addCategory: (input) => categoryService.create(input),
   today: () => useUiStore.getState().today,
 };
+
+/** Undo for a delete confirmed in the chat (soft-deleted rows are purged on the next app start). */
+export const restoreEntry = (id: string) => transactionService.restore(id);

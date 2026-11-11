@@ -70,7 +70,9 @@ A personal app that answers three questions, fast:
 - A ✨ button on Home opens the chat. Ask about your entries in English, Sinhala or Singlish; replies stream in.
 - What Claude looked at shows as a chip ("Checked November", "Searched “bus”") with a card of the real numbers from the phone: month totals, category bars, or matching entries. The reply text explains them (one-line answer, up to 3 bullets; amounts bold, + green, − red). Animated dots show while it works.
 - Claude reads data only through tools that run on the phone (month summary, category breakdown, entry search, category list). Only what a question needs is sent.
-- "Lunch 850 today" → Claude proposes the entry as a card; nothing is saved until you tap **Add entry**.
+- "Lunch 850, bus 160 today" → Claude proposes all entries from one message on one card (up to 10, with a total); nothing is saved until you tap **Add all**.
+- "The bus was 180 not 160" / "delete yesterday's KFC" → Claude finds the entry and shows a before → after card (edit) or a delete card. Deletes can be undone from the card until the app restarts.
+- 📷 Receipts: take or choose a photo; it is resized (max 1568 px, JPEG) and sent with the message. Claude reads the shop, date and total and proposes an entry card. The camera permission is asked only when you take a photo; choosing one uses Android's photo picker (no storage permission).
 - "Add a Fuel expense category" → Claude proposes a new income/expense category (name, icon from a fixed set, unused colour) as a card; saved only on **Create**. Names are unique per type; new categories sit before "Other". This is the only way to add categories for now (no rename/archive yet).
 - Model: Haiku 5.5 (default, cheap) or Opus 5.5. Chat history lives in memory only and is gone when you leave the screen.
 

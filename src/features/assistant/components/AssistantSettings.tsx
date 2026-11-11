@@ -155,7 +155,7 @@ export function AssistantSettings() {
 
             <Text variant="caption" color="textFaint">
               The key stays encrypted on this phone. When you ask a question, only the totals and entries needed to
-              answer it are sent to Anthropic. Nothing is sent unless you chat. Tip: set a monthly spend limit in the
+              answer it (and any photo you attach) are sent to Anthropic. Nothing is sent unless you chat. Tip: set a monthly spend limit in the
               Anthropic Console.
             </Text>
           </View>

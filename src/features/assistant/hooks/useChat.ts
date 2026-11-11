@@ -6,14 +6,17 @@ import { newId } from '@/shared/lib/id';
 import { useSettingsStore } from '@/shared/store/settingsStore';
 import { loadApiKey } from '../services/apiKey';
 import { describeError, makeClient, MAX_HISTORY, runTurn } from '../services/chatEngine';
-import { assistantData } from '../services/data';
+import { assistantData, restoreEntry } from '../services/data';
 import type { Card, Proposal } from '../services/tools';
 import { toolLabel } from '../services/toolLabel';
 
-export type ProposalStatus = 'pending' | 'saved' | 'declined';
+export type ProposalStatus = 'pending' | 'saved' | 'declined' | 'undone';
+
+/** A photo attached to a message (already resized, JPEG). */
+export type Attachment = { uri: string; base64: string };
 
 export type ChatItem =
-  | { id: string; kind: 'user'; text: string }
+  | { id: string; kind: 'user'; text: string; imageUri?: string }
   | { id: string; kind: 'assistant'; text: string }
   | { id: string; kind: 'proposal'; proposal: Proposal; status: ProposalStatus }
   | { id: string; kind: 'error'; text: string }
@@ -26,7 +29,9 @@ const TOOL_ACTIVITY: Record<string, string> = {
   get_breakdown: 'Looking at categories',
   search_entries: 'Searching entries',
   list_categories: 'Reading categories',
-  add_entry: 'Waiting for you to confirm',
+  add_entries: 'Waiting for you to confirm',
+  update_entry: 'Waiting for you to confirm',
+  delete_entry: 'Waiting for you to confirm',
   add_category: 'Waiting for you to confirm',
 };
 
@@ -73,9 +78,19 @@ export function useChat() {
     [patch],
   );
 
+  /** Undo a delete confirmed in this chat. */
+  const undo = useCallback(
+    async (id: string, entryId: string) => {
+      await restoreEntry(entryId);
+      haptics.light();
+      patch(id, (i) => (i.kind === 'proposal' ? { ...i, status: 'undone' } : i));
+    },
+    [patch],
+  );
+
   const send = useCallback(
-    async (raw: string) => {
-      const text = raw.trim();
+    async (raw: string, image?: Attachment) => {
+      const text = raw.trim() || (image ? 'Add this receipt.' : '');
       if (!text || busy) return;
       // The route can be opened by a deep link even when the feature is off.
       if (!enabled) {
@@ -90,7 +105,7 @@ export function useChat() {
         return;
       }
 
-      setItems((list) => [...list, { id: nextId(), kind: 'user', text }]);
+      setItems((list) => [...list, { id: nextId(), kind: 'user', text: raw.trim(), imageUri: image?.uri }]);
       setBusy(true);
       setActivity('');
 
@@ -103,7 +118,15 @@ export function useChat() {
       }
 
       const before = history.current.length;
-      history.current.push({ role: 'user', content: text });
+      history.current.push({
+        role: 'user',
+        content: image
+          ? [
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: image.base64 } },
+              { type: 'text', text },
+            ]
+          : text,
+      });
       const controller = new AbortController();
       abort.current = controller;
 
@@ -166,5 +189,5 @@ export function useChat() {
     [busy, enabled, model, patch],
   );
 
-  return { items, busy, activity, send, respond };
+  return { items, busy, activity, send, respond, undo };
 }

@@ -20,6 +20,9 @@ function setup() {
   const added: TransactionDraft[] = [];
   const searches: SearchFilter[] = [];
   const createdCats: unknown[] = [];
+  const updated: { id: string; draft: TransactionDraft }[] = [];
+  const deleted: string[] = [];
+  const stored = tx({ id: 'e1', categoryId: 'exp_transport', amount: 160_00, note: 'Bus', occurredOn: '2026-11-10' });
   const data: AssistantData = {
     monthEntries: async () => ({
       transactions: [
@@ -42,9 +45,15 @@ function setup() {
       added.push(d);
       return { ok: true, value: { ...tx({ categoryId: d.categoryId }) } };
     },
+    getEntry: async (id) => (id === 'e1' ? stored : null),
+    updateEntry: async (id, draft) => {
+      updated.push({ id, draft });
+      return { ok: true, value: stored };
+    },
+    deleteEntry: async (id) => void deleted.push(id),
     today: () => '2026-11-11',
   };
-  return { data, added, searches, createdCats };
+  return { data, added, searches, createdCats, updated, deleted };
 }
 
 const yes = async () => true;
@@ -54,7 +63,16 @@ const json = (s: string) => JSON.parse(s);
 describe('assistant tools', () => {
   it('defines a schema for every handler', () => {
     expect(TOOL_DEFINITIONS.map((t) => t.name).sort()).toEqual(
-      ['add_category', 'add_entry', 'get_breakdown', 'get_month_summary', 'list_categories', 'search_entries'],
+      [
+        'add_category',
+        'add_entries',
+        'delete_entry',
+        'get_breakdown',
+        'get_month_summary',
+        'list_categories',
+        'search_entries',
+        'update_entry',
+      ],
     );
   });
 
@@ -95,21 +113,37 @@ describe('assistant tools', () => {
     expect((await runTool(name, input, data, yes)).ok).toBe(false);
   });
 
-  it('adds an entry only after the user confirms', async () => {
+  it('adds several entries on one card after the user confirms', async () => {
     const { data, added } = setup();
-    const input = { type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11', note: ' lunch ' };
-    let seen;
-    const r = await runTool('add_entry', input, data, async (p) => ((seen = p), true));
+    const entries = [
+      { type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11', note: ' lunch ' },
+      { type: 'expense', amount: '160', category_id: 'exp_transport', date: '2026-11-11' },
+    ];
+    const seen: unknown[] = [];
+    const r = await runTool('add_entries', { entries }, data, async (p) => (seen.push(p), true));
     expect(r.ok).toBe(true);
-    expect(seen).toMatchObject({ kind: 'entry', amount: 850_00, note: 'lunch', category: { id: 'exp_food' } });
-    expect(added).toEqual([{ type: 'expense', amountText: '850', categoryId: 'exp_food', occurredOn: '2026-11-11', note: 'lunch' }]);
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toMatchObject({ kind: 'entries', items: [{ amount: 850_00, note: 'lunch' }, { amount: 160_00 }] });
+    expect(added).toEqual([
+      { type: 'expense', amountText: '850.00', categoryId: 'exp_food', occurredOn: '2026-11-11', note: 'lunch' },
+      { type: 'expense', amountText: '160.00', categoryId: 'exp_transport', occurredOn: '2026-11-11', note: '' },
+    ]);
+    expect(json(r.content).saved).toHaveLength(2);
   });
 
   it('saves nothing when the user declines', async () => {
     const { data, added } = setup();
-    const r = await runTool('add_entry', { type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11' }, data, no);
+    const entries = [{ type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11' }];
+    const r = await runTool('add_entries', { entries }, data, no);
     expect(r.content).toMatch(/declined/);
     expect(added).toHaveLength(0);
+  });
+
+  it('rejects more than 10 entries or an empty list', async () => {
+    const { data } = setup();
+    const one = { type: 'expense', amount: '1', category_id: 'exp_food', date: '2026-11-11' };
+    expect((await runTool('add_entries', { entries: Array(11).fill(one) }, data, yes)).ok).toBe(false);
+    expect((await runTool('add_entries', { entries: [] }, data, yes)).ok).toBe(false);
   });
 
   it.each([
@@ -118,15 +152,49 @@ describe('assistant tools', () => {
     [{ date: '2026-11-12' }, /Future/],
     [{ category_id: 'inc_salary' }, /is for income/],
     [{ category_id: 'missing' }, /Unknown category/],
-  ])('refuses an invalid entry %p without asking', async (patch, message) => {
+  ])('refuses the whole card if one entry is invalid %p, without asking', async (patch, message) => {
     const { data, added } = setup();
     const confirm = jest.fn(yes);
-    const input = { type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11', ...patch };
-    const r = await runTool('add_entry', input, data, confirm);
+    const good = { type: 'expense', amount: '850', category_id: 'exp_food', date: '2026-11-11' };
+    const r = await runTool('add_entries', { entries: [good, { ...good, ...patch }] }, data, confirm);
     expect(r.ok).toBe(false);
+    expect(r.content).toMatch(/^Entry 2: /);
     expect(r.content).toMatch(message);
     expect(confirm).not.toHaveBeenCalled();
     expect(added).toHaveLength(0);
+  });
+});
+
+describe('update_entry / delete_entry tools', () => {
+  it('shows before and after, and saves only changed fields merged with the old ones', async () => {
+    const { data, updated } = setup();
+    let seen;
+    const r = await runTool('update_entry', { id: 'e1', amount: '180' }, data, async (p) => ((seen = p), true));
+    expect(r.ok).toBe(true);
+    expect(seen).toMatchObject({ kind: 'update', before: { id: 'e1', amount: 160_00 }, after: { amount: 180_00, note: 'Bus' } });
+    expect(updated).toEqual([
+      { id: 'e1', draft: { type: 'expense', amountText: '180.00', categoryId: 'exp_transport', occurredOn: '2026-11-10', note: 'Bus' } },
+    ]);
+  });
+
+  it('refuses an unknown id, no-op changes and invalid values without asking', async () => {
+    const { data, updated } = setup();
+    const confirm = jest.fn(yes);
+    expect((await runTool('update_entry', { id: 'nope', amount: '1' }, data, confirm)).content).toMatch(/No entry/);
+    expect((await runTool('update_entry', { id: 'e1', amount: '160' }, data, confirm)).content).toMatch(/Nothing would change/);
+    expect((await runTool('update_entry', { id: 'e1', type: 'income' }, data, confirm)).content).toMatch(/is for expense/);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(updated).toHaveLength(0);
+  });
+
+  it('deletes only after confirm', async () => {
+    const { data, deleted } = setup();
+    expect((await runTool('delete_entry', { id: 'e1' }, data, no)).content).toMatch(/declined/);
+    expect(deleted).toEqual([]);
+    const r = await runTool('delete_entry', { id: 'e1' }, data, yes);
+    expect(r.ok).toBe(true);
+    expect(deleted).toEqual(['e1']);
+    expect((await runTool('delete_entry', { id: 'x' }, data, yes)).ok).toBe(false);
   });
 });
 
