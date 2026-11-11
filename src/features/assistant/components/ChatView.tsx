@@ -14,6 +14,9 @@ import { Icon } from '@/shared/ui/Icon';
 import { PressableScale } from '@/shared/ui/PressableScale';
 import { Text } from '@/shared/ui/Text';
 import { useChat, type ChatItem } from '../hooks/useChat';
+import { RichText } from './RichText';
+import { ToolCard } from './ToolCard';
+import { TypingDots } from './TypingDots';
 
 const SUGGESTIONS = [
   'How much did I spend this month?',
@@ -61,11 +64,9 @@ export function ChatView() {
         onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={<Suggestions onPick={submit} />}
         ListFooterComponent={
-          activity ? (
+          activity !== null ? (
             <Animated.View entering={FadeIn.duration(160)}>
-              <Text variant="caption" color="textMuted">
-                {activity}
-              </Text>
+              <TypingDots label={activity} />
             </Animated.View>
           ) : undefined
         }
@@ -168,6 +169,7 @@ function Message({ item, onRespond }: { item: ChatItem; onRespond: (id: string, 
       </Animated.View>
     );
   }
+  if (item.kind === 'tool') return <ToolCard label={item.label} card={item.card} />;
   return <ProposalCard item={item} onRespond={onRespond} />;
 }
 
@@ -215,24 +217,6 @@ function ProposalCard({
         </Text>
       )}
     </Animated.View>
-  );
-}
-
-/** Plain text with **bold** spans (the only markdown the assistant is asked to use). */
-function RichText({ text }: { text: string }) {
-  const parts = text.replace(/^#+\s*/gm, '').replace(/`/g, '').split(/(\*\*[^*]+\*\*)/g);
-  return (
-    <Text variant="body">
-      {parts.map((part, i) =>
-        part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
-          <Text key={i} variant="body" style={styles.bold}>
-            {part.slice(2, -2)}
-          </Text>
-        ) : (
-          part
-        ),
-      )}
-    </Text>
   );
 }
 

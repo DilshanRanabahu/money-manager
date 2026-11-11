@@ -3,7 +3,7 @@ import { fetch as expoFetch } from 'expo/fetch';
 
 import { formatMonth, monthOf, type ISODate } from '@/shared/lib/dates';
 import { CURRENCY_SYMBOL } from '@/shared/lib/money';
-import { runTool, TOOL_DEFINITIONS, type AssistantData, type ConfirmFn } from './tools';
+import { runTool, TOOL_DEFINITIONS, type AssistantData, type Card, type ConfirmFn } from './tools';
 
 export type AssistantModel = 'claude-haiku-5-5' | 'claude-opus-5-5';
 export const DEFAULT_MODEL: AssistantModel = 'claude-haiku-5-5';
@@ -36,11 +36,14 @@ Today is ${today} (current month ${monthOf(today)}, ${formatMonth(monthOf(today)
 Use the tools to read the user's real data; never guess numbers. Months without data simply have no entries.
 "Carry-over" is what was left from earlier months; it is already part of a month's income (or expense if negative).
 
+Questions about past money ("how much", "kiyada", "kiyak", "keeyada giye", "kohenda") are questions: answer them with the read tools (search_entries with a text like "bus", or get_breakdown). Only add an entry when the user states an amount they spent or received.
 When the user tells you about spending or income, add it with add_entry (call list_categories first to pick the best category; default date is today). The app asks the user to confirm each one, so just call the tool; afterwards say briefly what was saved or declined.
 If the user asks for a new category, call add_category right away (pick a fitting icon); the confirm card lets them decline, so don't ask first. When adding an entry and no existing category fits, you may also propose one with add_category, then use its id.
 
 The user may write in English, Sinhala, or Singlish (Sinhala in English letters). Reply in the same style they use.
-This is a small phone screen: answer briefly and plainly, short lines, no tables, no headings, no code formatting. Use bold sparingly for key amounts.
+The app shows the results of get_month_summary, get_breakdown and search_entries to the user as cards (totals, category bars, entry rows). Don't repeat those numbers as lists; say what they mean.
+Lead with a one-sentence answer, then at most 3 short bullets of insight (biggest change, something to watch), each one line. Mention an amount only when it is the point; don't count entries.
+This is a small phone screen: plain short lines, simple "- " bullets if needed, no tables, no headings, no code formatting. Use **bold** sparingly for the key fact. An emoji is fine occasionally.
 You can give practical budgeting suggestions based on their data, but you are not a licensed financial advisor.`;
 }
 
@@ -49,6 +52,8 @@ export type StepEvents = {
   /** A new assistant message starts (after tool calls). */
   onNewBlock(): void;
   onToolStart(name: string): void;
+  /** A tool finished; `card` is what the chat shows for it, if anything. */
+  onToolDone(name: string, input: unknown, ok: boolean, card?: Card): void;
 };
 
 export class ChatError extends Error {}
@@ -110,12 +115,13 @@ export async function runTurn(opts: {
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const use of toolUses) {
       events.onToolStart(use.name);
-      let outcome;
+      let outcome: Awaited<ReturnType<typeof runTool>>;
       try {
         outcome = await runTool(use.name, use.input, data, confirm);
       } catch {
         outcome = { ok: false, content: 'The app could not read its data.' };
       }
+      events.onToolDone(use.name, use.input, outcome.ok, outcome.card);
       results.push({ type: 'tool_result', tool_use_id: use.id, content: outcome.content, is_error: !outcome.ok });
     }
     history.push({ role: 'user', content: results });

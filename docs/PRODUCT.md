@@ -68,6 +68,7 @@ A personal app that answers three questions, fast:
 ### 8. Ask Money (optional, Settings → Assistant)
 - Off by default. Turn it on and paste your own Anthropic API key; it is checked, then stored in `expo-secure-store` (Android Keystore). Never bundled in the app, never in backups.
 - A ✨ button on Home opens the chat. Ask about your entries in English, Sinhala or Singlish; replies stream in.
+- What Claude looked at shows as a chip ("Checked November", "Searched “bus”") with a card of the real numbers from the phone: month totals, category bars, or matching entries. The reply text explains them (one-line answer, up to 3 bullets; amounts bold, + green, − red). Animated dots show while it works.
 - Claude reads data only through tools that run on the phone (month summary, category breakdown, entry search, category list). Only what a question needs is sent.
 - "Lunch 850 today" → Claude proposes the entry as a card; nothing is saved until you tap **Add entry**.
 - "Add a Fuel expense category" → Claude proposes a new income/expense category (name, icon from a fixed set, unused colour) as a card; saved only on **Create**. Names are unique per type; new categories sit before "Other". This is the only way to add categories for now (no rename/archive yet).

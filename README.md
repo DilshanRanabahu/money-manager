@@ -37,14 +37,17 @@
 ## Ask Money
 
 <p align="center">
-  <img src="docs/images/chat.png" width="220" alt="Ask Money comparing this month with last month" />
-  &nbsp;&nbsp;
-  <img src="docs/images/confirm.png" width="220" alt="Ask Money proposing a lunch entry with a confirm card" />
+  <img src="docs/images/cards.png" width="200" alt="Ask Money showing month summary cards for November and October" />
+  &nbsp;
+  <img src="docs/images/chat.png" width="200" alt="Ask Money answering in Singlish with a card of matching bus entries" />
+  &nbsp;
+  <img src="docs/images/confirm.png" width="200" alt="Ask Money proposing a lunch entry with a confirm card" />
 </p>
 
 Turn it on in **Settings → Assistant** and paste your own [Anthropic API key](https://console.anthropic.com).
 
 - The key is stored in the Android Keystore through `expo-secure-store`. It is not in the code, the APK or backups.
+- Answers come with cards drawn from the phone's own data (month totals, category bars, matching entries), so the numbers are always right. Claude's text explains them: a one-line answer and a few bullets, with amounts in bold and + / − in green / red.
 - Claude reads your data only through a few tools that run on the phone: month summary, category breakdown, entry search and the category list. It gets only what the question needs.
 - Writing works through `add_entry` and `add_category`. Both show a card, and nothing is saved until you tap it.
 - Haiku 5.5 is the default (cheap), and you can switch to Opus 5.5. Chat history stays in memory and is gone when you leave the screen.

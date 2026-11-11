@@ -160,7 +160,27 @@ const entryOut = (t: TransactionWithCategory) => ({
   ...(t.note ? { note: t.note } : {}),
 });
 
-export type ToolOutcome = { ok: boolean; content: string };
+/**
+ * What the chat shows for a tool result: real numbers straight from the phone's data,
+ * so the reply text only needs to explain them.
+ */
+export type Card =
+  | { kind: 'summary'; month: MonthKey; income: number; expense: number; balance: number; carry: number }
+  | {
+      kind: 'breakdown';
+      month: MonthKey;
+      type: 'income' | 'expense';
+      total: number;
+      rows: { category: Category; amount: number; share: number }[];
+      /** Categories folded into "others" (not shown as rows). */
+      more: number;
+    }
+  | { kind: 'entries'; count: number; total: number; rows: TransactionWithCategory[] };
+
+/** Rows shown on a card; the model still gets the full list. */
+export const CARD_ROWS = 5;
+
+export type ToolOutcome = { ok: boolean; content: string; card?: Card };
 
 /** Run one tool call. Input is untrusted model output: validated here before use. */
 export async function runTool(
@@ -176,10 +196,10 @@ export async function runTool(
   }
   const args = parsed.data as never;
   const out = await handlers[name as ToolName](args, data, confirm);
-  return { ok: out.ok, content: typeof out.value === 'string' ? out.value : JSON.stringify(out.value) };
+  return { ok: out.ok, content: typeof out.value === 'string' ? out.value : JSON.stringify(out.value), card: out.card };
 }
 
-type Out = { ok: boolean; value: unknown };
+type Out = { ok: boolean; value: unknown; card?: Card };
 type Handler<K extends ToolName> = (a: z.infer<(typeof schemas)[K]>, d: AssistantData, c: ConfirmFn) => Promise<Out>;
 
 const handlers: { [K in ToolName]: Handler<K> } = {
@@ -196,6 +216,7 @@ const handlers: { [K in ToolName]: Handler<K> } = {
         carry_from_previous_months: money(s.carry),
         entries: transactions.length,
       },
+      card: { kind: 'summary', month: m, income: s.income, expense: s.expense, balance: s.balance, carry: s.carry },
     };
   },
 
@@ -214,6 +235,14 @@ const handlers: { [K in ToolName]: Handler<K> } = {
           share: `${Math.round(r.share * 100)}%`,
           entries: r.count,
         })),
+      },
+      card: {
+        kind: 'breakdown',
+        month: m,
+        type: t,
+        total,
+        rows: rows.slice(0, CARD_ROWS).map((r) => ({ category: r.category, amount: r.amount, share: r.share })),
+        more: Math.max(rows.length - CARD_ROWS, 0),
       },
     };
   },
@@ -235,6 +264,7 @@ const handlers: { [K in ToolName]: Handler<K> } = {
         note: 'net_total is income minus expense over ALL matches',
         shown: r.rows.map(entryOut),
       },
+      card: r.count > 0 ? { kind: 'entries', count: r.count, total: r.total, rows: r.rows.slice(0, CARD_ROWS) } : undefined,
     };
   },
 

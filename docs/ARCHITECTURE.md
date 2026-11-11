@@ -75,9 +75,10 @@ money-manager/
 │   │   │   └── components/       # AppLockOverlay (root, above everything), AppLockSettings
 │   │   ├── assistant/            # "Ask Money" chat (only feature that uses the network)
 │   │   │   ├── services/         # tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
-│   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos)
+│   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos),
+│   │   │   │                     #   richText.ts + toolLabel.ts (pure, tested; tools also return UI cards)
 │   │   │   ├── hooks/            # useChat (in-memory session, confirm cards)
-│   │   │   └── components/       # ChatView, AssistantSettings
+│   │   │   └── components/       # ChatView, ToolCard, RichText, TypingDots, AssistantSettings
 │   │   └── backup/
 │   │       ├── services/         # exportData.ts, importData.ts
 │   │       ├── domain/           # backupSchema.ts (Zod)

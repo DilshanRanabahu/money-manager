@@ -7,7 +7,8 @@ import { useSettingsStore } from '@/shared/store/settingsStore';
 import { loadApiKey } from '../services/apiKey';
 import { describeError, makeClient, MAX_HISTORY, runTurn } from '../services/chatEngine';
 import { assistantData } from '../services/data';
-import type { Proposal } from '../services/tools';
+import type { Card, Proposal } from '../services/tools';
+import { toolLabel } from '../services/toolLabel';
 
 export type ProposalStatus = 'pending' | 'saved' | 'declined';
 
@@ -15,15 +16,18 @@ export type ChatItem =
   | { id: string; kind: 'user'; text: string }
   | { id: string; kind: 'assistant'; text: string }
   | { id: string; kind: 'proposal'; proposal: Proposal; status: ProposalStatus }
-  | { id: string; kind: 'error'; text: string };
+  | { id: string; kind: 'error'; text: string }
+  /** What a tool looked at, with its card (real numbers from the phone). */
+  | { id: string; kind: 'tool'; label: string; ok: boolean; card?: Card };
 
-const TOOL_LABELS: Record<string, string> = {
-  get_month_summary: 'Checking the month…',
-  get_breakdown: 'Looking at categories…',
-  search_entries: 'Searching entries…',
-  list_categories: 'Reading categories…',
-  add_entry: 'Waiting for you to confirm…',
-  add_category: 'Waiting for you to confirm…',
+/** Shown next to the typing dots while a tool runs. */
+const TOOL_ACTIVITY: Record<string, string> = {
+  get_month_summary: 'Checking the month',
+  get_breakdown: 'Looking at categories',
+  search_entries: 'Searching entries',
+  list_categories: 'Reading categories',
+  add_entry: 'Waiting for you to confirm',
+  add_category: 'Waiting for you to confirm',
 };
 
 const nextId = newId;
@@ -88,7 +92,7 @@ export function useChat() {
 
       setItems((list) => [...list, { id: nextId(), kind: 'user', text }]);
       setBusy(true);
-      setActivity('Thinking…');
+      setActivity('');
 
       const apiKey = await loadApiKey();
       if (!apiKey) {
@@ -135,9 +139,15 @@ export function useChat() {
             onText: appendText,
             onNewBlock: () => {
               current = null;
-              setActivity('Thinking…');
+              setActivity('');
             },
-            onToolStart: (name) => setActivity(TOOL_LABELS[name] ?? 'Working…'),
+            onToolStart: (name) => setActivity(TOOL_ACTIVITY[name] ?? ''),
+            onToolDone: (name, input, ok, card) => {
+              const label = toolLabel(name, input, assistantData.today().slice(0, 4));
+              if (!label) return;
+              current = null;
+              setItems((list) => [...list, { id: nextId(), kind: 'tool', label, ok, card }]);
+            },
           },
         });
       } catch (e) {
