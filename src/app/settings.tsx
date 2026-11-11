@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-na
 
 import { AssistantSettings } from '@/features/assistant';
 import { exportBackup, pickBackup, restoreBackup } from '@/features/backup';
+import { ReminderSettings } from '@/features/reminders';
 import { AppLockSettings, withoutLocking } from '@/features/security';
 import { haptics } from '@/shared/lib/haptics';
 import { useSettingsStore, type ThemePreference } from '@/shared/store/settingsStore';
@@ -79,6 +80,10 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.xl }}>
         <Section title="Appearance">
           <SegmentedControl<ThemePreference> options={THEME_OPTIONS} value={theme} onChange={setTheme} />
+        </Section>
+
+        <Section title="Reminders">
+          <ReminderSettings />
         </Section>
 
         <Section title="Security">

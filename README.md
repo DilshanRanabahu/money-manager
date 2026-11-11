@@ -30,7 +30,8 @@
 - **Fast entry.** A number pad, one tap for the category (your last one is picked for you), today's date by default, an optional note. Swipe a row to delete, with Undo.
 - **Month view.** Balance, income and expense at the top, entries grouped by day. Last month's leftover carries into the new month automatically.
 - **Breakdown.** A donut of where the money went, change against last month, spending per day, and an estimate for the end of the month. Tap a category to see its entries.
-- **Ask Money (optional).** Chat with Claude about your entries in English, Sinhala or Singlish. It can also add entries and create new categories, and nothing is saved until you confirm.
+- **Ask Money (optional).** Chat with Claude about your entries in English, Sinhala or Singlish. It can add several entries at once, fix or delete entries, read a receipt photo, and create categories. Nothing changes until you confirm.
+- **Daily reminder (optional).** A gentle notification in the evening, only on days you haven't logged anything. Tap it to add an entry.
 - **Private by design.** No account, no server. The database is encrypted on the phone (SQLCipher, AES-256), app lock uses your fingerprint or screen lock, and backups are a JSON file you export yourself.
 - **Light and dark themes**, haptics and small animations that explain what changed.
 
@@ -44,14 +45,33 @@
   <img src="docs/images/confirm.png" width="200" alt="Ask Money proposing a lunch entry with a confirm card" />
 </p>
 
+<p align="center">
+  <img src="docs/images/batch.png" width="200" alt="Two entries from one message on one card with Add all" />
+  &nbsp;
+  <img src="docs/images/edit.png" width="200" alt="Edit card showing the bus entry before and after" />
+  &nbsp;
+  <img src="docs/images/receipt.png" width="200" alt="A receipt photo read into a groceries entry card" />
+</p>
+
 Turn it on in **Settings → Assistant** and paste your own [Anthropic API key](https://console.anthropic.com).
 
 - The key is stored in the Android Keystore through `expo-secure-store`. It is not in the code, the APK or backups.
 - Answers come with cards drawn from the phone's own data (month totals, category bars, matching entries), so the numbers are always right. Claude's text explains them: a one-line answer and a few bullets, with amounts in bold and + / − in green / red.
 - Claude reads your data only through a few tools that run on the phone: month summary, category breakdown, entry search and the category list. It gets only what the question needs.
-- Writing works through `add_entry` and `add_category`. Both show a card, and nothing is saved until you tap it.
+- **Several entries at once:** "Lunch 850, bus 160 today" becomes one card with a total and **Add all**.
+- **Fix or delete:** "The bus was 180 not 160" shows a before → after card; deletes can be undone from the card.
+- **Receipts:** take or choose a photo. It is resized and sent with the message; Claude reads the shop, date and total and proposes an entry.
+- Every change (`add_entries`, `update_entry`, `delete_entry`, `add_category`) shows a card, and nothing is saved until you tap it.
 - Haiku 5.5 is the default (cheap), and you can switch to Opus 5.5. Chat history stays in memory and is gone when you leave the screen.
 - Tip: set a monthly spend limit in the Anthropic Console.
+
+## Daily reminder
+
+<p align="center">
+  <img src="docs/images/reminder.png" width="260" alt="Settings: daily reminder switched on at 9 PM" />
+</p>
+
+Turn it on in **Settings → Reminders** and pick 8, 9 or 10 PM. Reminders are scheduled on the phone for the next week and skip any day you've already logged; logging something cancels tonight's. Tapping one opens the add-entry sheet. No server is involved.
 
 ## Security
 
@@ -60,8 +80,8 @@ Turn it on in **Settings → Assistant** and paste your own [Anthropic API key](
 | Data on the phone | SQLCipher (AES-256) with a random 256-bit key in the Android Keystore. An older plain database is migrated, checked, and then deleted. |
 | Opening the app | Optional app lock with strong biometrics or the screen lock. Screenshots are blocked while it is on, and moving the clock back doesn't skip the lock. |
 | Backups | Android Auto Backup is off. Export and import a JSON file yourself (import is validated and size-limited). |
-| Permissions | Biometrics, vibration (haptics) and internet (Ask Money). Storage, media, overlay and microphone permissions are blocked. |
-| Network | None, unless you use Ask Money. It talks only to `api.anthropic.com`. |
+| Permissions | Biometrics, vibration (haptics), internet (Ask Money), notifications (asked when you turn on the reminder) and camera (asked only when you take a receipt photo). Choosing a photo uses Android's photo picker, so storage, media, overlay and microphone permissions stay blocked. |
+| Network | None, unless you use Ask Money. It talks only to `api.anthropic.com`, and a photo leaves the phone only when you send it. |
 
 Expo Go has no SQLCipher, so during development the database is not encrypted. Settings shows which is the case.
 

@@ -55,6 +55,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Breakdown: change vs last month, spending pace + month-end estimate, tap a category to see its entries
 - [x] Ask Money chat (Claude, user's own API key in secure store, on-device tools, confirm before adding entries)
 - [x] Ask Money can create new income/expense categories (confirm card)
+- [x] Daily reminder notification on days with nothing logged (8/9/10 PM, tap opens the add sheet)
 - [x] Ask Money: several entries per message on one card, edit / delete entries (before → after, undo), receipt photos
 - [x] Test receipt photos on the device (sample receipt through the resize → Claude pipeline: total, date and shop read correctly; the system photo picker and camera themselves still to try with a real receipt)
 - [x] Test Ask Money on the device with a real key (Expo Go streaming via `expo/fetch`; `metro.config.js` forces the SDK's CommonJS build)
@@ -77,4 +78,3 @@ Pick from here only after a month of real use, based on what was actually missin
 - Multiple wallets (cash, bank, card)
 - Home screen widget for quick add
 - Cloud backup / sync (repository layer is the only place to change)
-- Reminders ("You haven't logged today")

@@ -70,6 +70,13 @@
           "cameraPermission": "Take a photo of a receipt so Ask Money can add it.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#111113"
+        }
       ]
     ],
     "scheme": "moneymanager",

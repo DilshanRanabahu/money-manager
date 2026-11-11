@@ -76,9 +76,15 @@ A personal app that answers three questions, fast:
 - "Add a Fuel expense category" → Claude proposes a new income/expense category (name, icon from a fixed set, unused colour) as a card; saved only on **Create**. Names are unique per type; new categories sit before "Other". This is the only way to add categories for now (no rename/archive yet).
 - Model: Haiku 5.5 (default, cheap) or Opus 5.5. Chat history lives in memory only and is gone when you leave the screen.
 
+### 9. Daily reminder (Settings → Reminders)
+- Off by default. When on, a local notification at 8, 9 or 10 PM, **only on days with nothing logged** (any entry dated today counts).
+- One-off reminders are scheduled for the next 7 days and refreshed whenever today's entries, the setting or the day change; logging something removes tonight's. Android may deliver up to an hour late to save battery.
+- Tapping it opens the add-entry sheet. While the app is open it is not shown.
+- No server: everything is scheduled on the phone (`expo-notifications`).
+
 ## Not in v1 (on purpose)
 
-Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · notifications · widgets · receipt photos · managing categories in the UI (rename / reorder / archive; adding works through Ask Money).
+Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · push notifications · widgets · receipt photos · managing categories in the UI (rename / reorder / archive; adding works through Ask Money).
 
 These live in [ROADMAP.md](ROADMAP.md#later). We only add one when v1 is used daily and the need is real.
 

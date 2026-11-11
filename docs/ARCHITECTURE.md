@@ -73,6 +73,11 @@ money-manager/
 │   │   │   ├── store/            # lockStore.ts (locked / covered / busy), withoutLocking()
 │   │   │   ├── hooks/            # useAppLockLifecycle (AppState), useUnlock
 │   │   │   └── components/       # AppLockOverlay (root, above everything), AppLockSettings
+│   │   ├── reminders/            # Daily "nothing logged today" notification
+│   │   │   ├── domain/           # schedule.ts (which evenings to remind; pure, tested)
+│   │   │   ├── services/         # notifications.ts (expo-notifications: permission, schedule, cancel)
+│   │   │   ├── hooks/            # useReminderSync (re-schedule on data/setting/day change), useReminderTap
+│   │   │   └── components/       # ReminderSettings
 │   │   ├── assistant/            # "Ask Money" chat (only feature that uses the network)
 │   │   │   ├── services/         # tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
 │   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos),

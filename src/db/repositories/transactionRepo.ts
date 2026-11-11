@@ -122,6 +122,15 @@ export const transactionRepo = {
     return { rows: rows.map(toJoined), total: agg?.total ?? 0, count: agg?.count ?? 0 };
   },
 
+  /** How many entries are dated on `date` (used by the daily reminder). */
+  async countOn(date: string): Promise<number> {
+    const row = await getDb().getFirstAsync<{ n: number }>(
+      'SELECT COUNT(*) AS n FROM transactions WHERE deleted_at IS NULL AND occurred_on = ?',
+      date,
+    );
+    return row?.n ?? 0;
+  },
+
   async findById(id: string): Promise<TransactionWithCategory | null> {
     const row = await getDb().getFirstAsync<JoinedRow>(
       `${JOINED_SELECT} WHERE t.id = ? AND t.deleted_at IS NULL`,

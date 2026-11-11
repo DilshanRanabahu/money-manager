@@ -18,6 +18,8 @@ const KEYS = {
   lockAfter: 'pref.lockAfter',
   assistant: 'pref.assistant',
   assistantModel: 'pref.assistantModel',
+  reminder: 'pref.reminder',
+  reminderHour: 'pref.reminderHour',
 } as const;
 
 const read = (key: string): string | null => {
@@ -51,11 +53,18 @@ type SettingsState = {
   assistantModel: AssistantModelPreference;
   setAssistant: (on: boolean) => void;
   setAssistantModel: (model: AssistantModelPreference) => void;
+  /** Evening reminder when nothing was logged today. Off by default. */
+  reminder: boolean;
+  /** Hour of the reminder (20, 21 or 22). */
+  reminderHour: number;
+  setReminder: (on: boolean) => void;
+  setReminderHour: (hour: number) => void;
 };
 
 const storedTheme = read(KEYS.theme);
 const storedLockAfter = read(KEYS.lockAfter);
 const storedModel = read(KEYS.assistantModel);
+const storedReminderHour = Number(read(KEYS.reminderHour));
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   theme: storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system',
@@ -90,5 +99,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setAssistantModel: (model) => {
     write(KEYS.assistantModel, model);
     set({ assistantModel: model });
+  },
+  reminder: read(KEYS.reminder) === 'on',
+  reminderHour: [20, 21, 22].includes(storedReminderHour) ? storedReminderHour : 21,
+  setReminder: (on) => {
+    write(KEYS.reminder, on ? 'on' : 'off');
+    set({ reminder: on });
+  },
+  setReminderHour: (hour) => {
+    write(KEYS.reminderHour, String(hour));
+    set({ reminderHour: hour });
   },
 }));

@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DbProvider } from '@/db/DbProvider';
 import { cleanupOldExports } from '@/features/backup';
+import { useReminderSync, useReminderTap } from '@/features/reminders';
 import { AppLockOverlay, useAppLockLifecycle } from '@/features/security';
 import { transactionService } from '@/features/transactions';
 import { useDayRollover } from '@/shared/hooks/useDayRollover';
@@ -56,6 +57,9 @@ function Themed({ children }: { children: React.ReactNode }) {
 
 function RootStack() {
   const { colors } = useTheme();
+  // Inside DbProvider: these read today's entries.
+  useReminderSync();
+  useReminderTap();
   const sheet = {
     presentation: 'formSheet',
     sheetAllowedDetents: 'fitToContents',
