@@ -53,6 +53,9 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Expense categories "AI subscriptions" and "API subscriptions"
 - [x] App lock with fingerprint / phone screen lock, toggle in Settings, lock-again delay
 - [x] Breakdown: change vs last month, spending pace + month-end estimate, tap a category to see its entries
+- [x] Ask Money chat (Claude, user's own API key in secure store, on-device tools, confirm before adding entries)
+- [x] Ask Money can create new income/expense categories (confirm card)
+- [x] Test Ask Money on the device with a real key (Expo Go streaming via `expo/fetch`; `metro.config.js` forces the SDK's CommonJS build)
 
 ## Security follow-ups
 - [ ] Encrypt the database with SQLCipher (`expo-sqlite` `useSQLCipher`), key in `expo-secure-store`; migrate the existing plaintext DB

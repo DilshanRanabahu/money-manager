@@ -15,7 +15,7 @@ A personal app that answers three questions, fast:
 ## Principles
 
 - **Fast entry beats rich entry.** Adding an expense must take under 5 seconds: open, type amount, pick category, save.
-- **Offline and private.** All data lives on the device. No account, no server.
+- **Offline and private.** All data lives on the device. No account, no server. The only network use is the optional Ask Money chat, which is off by default.
 - **Calm UI.** Minimal, readable, no clutter. Motion explains changes; it never decorates.
 - **Small and correct.** Fewer features, each done well. Money math is always exact.
 
@@ -65,9 +65,17 @@ A personal app that answers three questions, fast:
 - Export all data to a JSON file (share sheet).
 - Import from that JSON file.
 
+### 8. Ask Money (optional, Settings → Assistant)
+- Off by default. Turn it on and paste your own Anthropic API key; it is checked, then stored in `expo-secure-store` (Android Keystore). Never bundled in the app, never in backups.
+- A ✨ button on Home opens the chat. Ask about your entries in English, Sinhala or Singlish; replies stream in.
+- Claude reads data only through tools that run on the phone (month summary, category breakdown, entry search, category list). Only what a question needs is sent.
+- "Lunch 850 today" → Claude proposes the entry as a card; nothing is saved until you tap **Add entry**.
+- "Add a Fuel expense category" → Claude proposes a new income/expense category (name, icon from a fixed set, unused colour) as a card; saved only on **Create**. Names are unique per type; new categories sit before "Other". This is the only way to add categories for now (no rename/archive yet).
+- Model: Haiku 5.5 (default, cheap) or Opus 5.5. Chat history lives in memory only and is gone when you leave the screen.
+
 ## Not in v1 (on purpose)
 
-Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · notifications · widgets · receipt photos · custom categories.
+Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · notifications · widgets · receipt photos · managing categories in the UI (rename / reorder / archive; adding works through Ask Money).
 
 These live in [ROADMAP.md](ROADMAP.md#later). We only add one when v1 is used daily and the need is real.
 

@@ -82,6 +82,46 @@ export const transactionRepo = {
     return row?.balance ?? 0;
   },
 
+  /** Filtered search (used by the assistant). Dates are inclusive; text matches note or category name. */
+  async search(f: {
+    text?: string;
+    categoryId?: string;
+    type?: 'income' | 'expense';
+    from?: string;
+    to?: string;
+    limit: number;
+  }): Promise<{ rows: TransactionWithCategory[]; total: number; count: number }> {
+    const where = ['t.deleted_at IS NULL'];
+    const args: (string | number)[] = [];
+    if (f.text) {
+      where.push("(t.note LIKE ? ESCAPE '\\' OR c.name LIKE ? ESCAPE '\\')");
+      const like = `%${f.text.replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
+      args.push(like, like);
+    }
+    const add = (sql: string, value: string | undefined) => {
+      if (!value) return;
+      where.push(sql);
+      args.push(value);
+    };
+    add('t.category_id = ?', f.categoryId);
+    add('t.type = ?', f.type);
+    add('t.occurred_on >= ?', f.from);
+    add('t.occurred_on <= ?', f.to);
+    const clause = where.join(' AND ');
+    const db = getDb();
+    const rows = await db.getAllAsync<JoinedRow>(
+      `${JOINED_SELECT} WHERE ${clause} ORDER BY t.occurred_on DESC, t.created_at DESC LIMIT ?`,
+      ...args,
+      f.limit,
+    );
+    const agg = await db.getFirstAsync<{ total: number | null; count: number }>(
+      `SELECT SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END) AS total, COUNT(*) AS count
+       FROM transactions t JOIN categories c ON c.id = t.category_id WHERE ${clause}`,
+      ...args,
+    );
+    return { rows: rows.map(toJoined), total: agg?.total ?? 0, count: agg?.count ?? 0 };
+  },
+
   async findById(id: string): Promise<TransactionWithCategory | null> {
     const row = await getDb().getFirstAsync<JoinedRow>(
       `${JOINED_SELECT} WHERE t.id = ? AND t.deleted_at IS NULL`,

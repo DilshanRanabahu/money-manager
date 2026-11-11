@@ -38,7 +38,8 @@
         {
           "faceIDPermission": "Allow Money to use Face ID to unlock the app."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "scheme": "moneymanager",
     "experiments": {

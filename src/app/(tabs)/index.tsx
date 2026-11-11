@@ -19,6 +19,7 @@ import {
   type TransactionWithCategory,
 } from '@/features/transactions';
 import type { MonthKey } from '@/shared/lib/dates';
+import { useSettingsStore } from '@/shared/store/settingsStore';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -40,19 +41,32 @@ export default function HomeScreen() {
   const direction = useUiStore((s) => s.monthDirection);
   const { transactions, days, carry, loading } = useMonthTransactions(month);
   const summary = useMemo(() => computeSummary(transactions, carry), [transactions, carry]);
+  const assistant = useSettingsStore((s) => s.assistant);
 
   return (
     <Screen>
       <View style={styles.header}>
         <MonthSwitcher />
-        <PressableScale
-          onPress={() => router.push('/settings')}
-          accessibilityLabel="Settings"
-          pressedScale={0.88}
-          style={styles.settings}
-        >
-          <Icon name="settings-outline" size={22} color="textMuted" />
-        </PressableScale>
+        <View style={styles.actions}>
+          {assistant && (
+            <PressableScale
+              onPress={() => router.push('/assistant')}
+              accessibilityLabel="Ask Money"
+              pressedScale={0.88}
+              style={styles.iconButton}
+            >
+              <Icon name="sparkles-outline" size={22} color="textMuted" />
+            </PressableScale>
+          )}
+          <PressableScale
+            onPress={() => router.push('/settings')}
+            accessibilityLabel="Settings"
+            pressedScale={0.88}
+            style={styles.iconButton}
+          >
+            <Icon name="settings-outline" size={22} color="textMuted" />
+          </PressableScale>
+        </View>
       </View>
 
       {/* Keyed by month: the list slides in from the direction of travel. */}
@@ -167,5 +181,6 @@ const MonthList = memo(function MonthList({ month, days, carry, loading, header 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginLeft: -8 },
-  settings: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
+  actions: { flexDirection: 'row', alignItems: 'center', marginRight: -10 },
+  iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

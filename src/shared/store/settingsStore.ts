@@ -8,6 +8,7 @@ import { create } from 'zustand';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type LockAfterPreference = 'immediately' | '1m' | '5m';
+export type AssistantModelPreference = 'claude-haiku-5-5' | 'claude-opus-5-5';
 
 const KEYS = {
   theme: 'pref.theme',
@@ -15,6 +16,8 @@ const KEYS = {
   lastIncomeCategory: 'pref.lastCategory.income',
   appLock: 'pref.appLock',
   lockAfter: 'pref.lockAfter',
+  assistant: 'pref.assistant',
+  assistantModel: 'pref.assistantModel',
 } as const;
 
 const read = (key: string): string | null => {
@@ -43,10 +46,16 @@ type SettingsState = {
   lockAfter: LockAfterPreference;
   setAppLock: (on: boolean) => void;
   setLockAfter: (value: LockAfterPreference) => void;
+  /** "Ask Money" chat (sends questions to Claude). Off by default. */
+  assistant: boolean;
+  assistantModel: AssistantModelPreference;
+  setAssistant: (on: boolean) => void;
+  setAssistantModel: (model: AssistantModelPreference) => void;
 };
 
 const storedTheme = read(KEYS.theme);
 const storedLockAfter = read(KEYS.lockAfter);
+const storedModel = read(KEYS.assistantModel);
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   theme: storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'system',
@@ -71,5 +80,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setLockAfter: (value) => {
     write(KEYS.lockAfter, value);
     set({ lockAfter: value });
+  },
+  assistant: read(KEYS.assistant) === 'on',
+  assistantModel: storedModel === 'claude-opus-5-5' ? storedModel : 'claude-haiku-5-5',
+  setAssistant: (on) => {
+    write(KEYS.assistant, on ? 'on' : 'off');
+    set({ assistant: on });
+  },
+  setAssistantModel: (model) => {
+    write(KEYS.assistantModel, model);
+    set({ assistantModel: model });
   },
 }));

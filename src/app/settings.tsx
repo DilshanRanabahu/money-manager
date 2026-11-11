@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AssistantSettings } from '@/features/assistant';
 import { exportBackup, pickBackup, restoreBackup } from '@/features/backup';
 import { AppLockSettings, withoutLocking } from '@/features/security';
 import { haptics } from '@/shared/lib/haptics';
@@ -84,6 +85,10 @@ export default function SettingsScreen() {
           <AppLockSettings />
         </Section>
 
+        <Section title="Assistant">
+          <AssistantSettings />
+        </Section>
+
         <Section title="Backup">
           <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden' }}>
             <Row icon="share-outline" label="Export data" hint="Save a JSON file" busy={busy === 'export'} onPress={onExport} />
@@ -93,7 +98,7 @@ export default function SettingsScreen() {
         </Section>
 
         <Text variant="caption" color="textFaint" align="center">
-          Money · v{Constants.expoConfig?.version ?? '1.0.0'} · Your data stays on this phone
+          Money · v{Constants.expoConfig?.version ?? '1.0.0'} · Your data stays on this phone unless you use Ask Money
         </Text>
       </ScrollView>
     </Screen>

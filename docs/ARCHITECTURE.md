@@ -64,7 +64,8 @@ money-manager/
 │   │   ├── categories/
 │   │   │   ├── components/       # CategoryChip, CategoryGrid
 │   │   │   ├── hooks/            # useCategories
-│   │   │   ├── domain/           # defaults.ts, types.ts
+│   │   │   ├── domain/           # defaults.ts, types.ts, newCategory.ts (validation + icon set)
+│   │   │   ├── services/         # categoryService.ts (create)
 │   │   │   └── index.ts
 │   │   ├── security/
 │   │   │   ├── domain/           # lockPolicy.ts (when to lock again; pure, tested)
@@ -72,6 +73,11 @@ money-manager/
 │   │   │   ├── store/            # lockStore.ts (locked / covered / busy), withoutLocking()
 │   │   │   ├── hooks/            # useAppLockLifecycle (AppState), useUnlock
 │   │   │   └── components/       # AppLockOverlay (root, above everything), AppLockSettings
+│   │   ├── assistant/            # "Ask Money" chat (only feature that uses the network)
+│   │   │   ├── services/         # tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
+│   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos)
+│   │   │   ├── hooks/            # useChat (in-memory session, confirm cards)
+│   │   │   └── components/       # ChatView, AssistantSettings
 │   │   └── backup/
 │   │       ├── services/         # exportData.ts, importData.ts
 │   │       ├── domain/           # backupSchema.ts (Zod)
