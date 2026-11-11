@@ -34,6 +34,7 @@ A personal app that answers three questions, fast:
 
 ### 3. Home: the month view
 - Month switcher at the top (arrows; tap the title to jump to the current month).
+- **New month, automatically**: when a new day or month starts (app reopened, or left open past midnight) the app follows the calendar. If the current month was on screen it moves to the new month, which starts with the carry-over from last month. A month the user chose to browse is left alone.
 - **Summary card**: Income, Expense, Balance (Income − Expense) for the selected month.
 - **Day-grouped list**: each day shows a header with that day's net total, then its entries, newest first.
 - Empty state for a month with no entries.

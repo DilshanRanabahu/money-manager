@@ -5,7 +5,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { CategoryIcon, useCategories } from '@/features/categories';
 import { CategoryEntryRow } from '@/features/summary';
 import { useMonthTransactions, type TransactionWithCategory } from '@/features/transactions';
-import { formatMonth, todayISO } from '@/shared/lib/dates';
+import { formatMonth } from '@/shared/lib/dates';
 import { formatAmount } from '@/shared/lib/money';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
@@ -23,7 +23,7 @@ export default function CategoryScreen() {
   const { transactions, loading } = useMonthTransactions(month);
   const { categories } = useCategories();
   const category = categories.find((c) => c.id === id);
-  const today = todayISO();
+  const today = useUiStore((s) => s.today);
 
   const { entries, total, typeTotal } = useMemo(() => {
     const list = transactions

@@ -18,7 +18,7 @@ import {
   type DayGroup,
   type TransactionWithCategory,
 } from '@/features/transactions';
-import { todayISO, type MonthKey } from '@/shared/lib/dates';
+import type { MonthKey } from '@/shared/lib/dates';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -96,7 +96,7 @@ type MonthListProps = {
 const MonthList = memo(function MonthList({ month, days, carry, loading, header }: MonthListProps) {
   const { spacing } = useTheme();
   const { remove } = useTransactionActions();
-  const today = todayISO();
+  const today = useUiStore((s) => s.today);
 
   // Ids present when this month's data first arrived. Anything not in here is new.
   // (Setting state during render is React's pattern for "remember the first value".)

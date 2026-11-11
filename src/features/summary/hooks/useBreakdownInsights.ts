@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 
 import type { TransactionType } from '@/features/categories';
 import { useMonthTransactions } from '@/features/transactions';
-import { addMonths, monthName, monthShortName, todayISO, type MonthKey } from '@/shared/lib/dates';
+import { useUiStore } from '@/shared/store/uiStore';
+import { addMonths, monthName, monthShortName, type MonthKey } from '@/shared/lib/dates';
 import { CARRY_CATEGORY_ID, computeBreakdown, computeSummary, type BreakdownRow } from '../domain/computeSummary';
 import {
   changeVsPrevious,
@@ -40,7 +41,7 @@ export function useBreakdownInsights(month: MonthKey, type: TransactionType): Br
   const current = useMonthTransactions(month);
   const previousMonth = addMonths(month, -1);
   const previous = useMonthTransactions(previousMonth);
-  const today = todayISO();
+  const today = useUiStore((s) => s.today);
 
   return useMemo(() => {
     const period = comparisonPeriod(month, today);

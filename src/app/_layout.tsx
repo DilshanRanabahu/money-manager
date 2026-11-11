@@ -9,6 +9,7 @@ import { DbProvider } from '@/db/DbProvider';
 import { cleanupOldExports } from '@/features/backup';
 import { AppLockOverlay, useAppLockLifecycle } from '@/features/security';
 import { transactionService } from '@/features/transactions';
+import { useDayRollover } from '@/shared/hooks/useDayRollover';
 import { ThemeProvider, useTheme } from '@/shared/theme/ThemeProvider';
 import { Button } from '@/shared/ui/Button';
 import { Text } from '@/shared/ui/Text';
@@ -16,6 +17,7 @@ import { ToastHost } from '@/shared/ui/ToastHost';
 
 export default function RootLayout() {
   useAppLockLifecycle();
+  useDayRollover();
   return (
     <GestureHandlerRootView style={styles.fill}>
       <ThemeProvider>

@@ -20,6 +20,7 @@ import { draftSchema } from '../domain/validation';
 import { AmountDisplay } from './AmountDisplay';
 import { AmountPad } from './AmountPad';
 import { DateStepper } from './DateStepper';
+import { MiniCalendar } from './MiniCalendar';
 
 const TYPE_OPTIONS = [
   { value: 'expense', label: 'Expense' },
@@ -47,6 +48,7 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
   const [date, setDate] = useState<ISODate>(initial?.occurredOn ?? todayISO());
   const [note, setNote] = useState(initial?.note ?? '');
   const [noteFocused, setNoteFocused] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -141,7 +143,15 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
 
       <View style={[styles.metaRow, { paddingHorizontal: spacing.lg, marginTop: spacing.md, gap: spacing.sm }]}>
         <View style={styles.flex}>
-          <DateStepper value={date} onChange={setDate} />
+          <DateStepper
+            value={date}
+            onChange={setDate}
+            calendarOpen={calendarOpen}
+            onOpenCalendar={() => {
+              Keyboard.dismiss();
+              setCalendarOpen((o) => !o);
+            }}
+          />
         </View>
         {/* Always a real input: one tap opens the keyboard. */}
         <View style={[styles.flex, styles.noteBox, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}>
@@ -149,7 +159,10 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
           <TextInput
             value={note}
             onChangeText={setNote}
-            onFocus={() => setNoteFocused(true)}
+            onFocus={() => {
+              setNoteFocused(true);
+              setCalendarOpen(false);
+            }}
             onBlur={() => setNoteFocused(false)}
             maxLength={MAX_NOTE_LENGTH}
             placeholder="Add note"
@@ -163,7 +176,19 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
       </View>
 
       {/* While typing a note, hide the number pad so Save sits right above the keyboard. */}
-      {!noteFocused && (
+      {calendarOpen && !noteFocused && (
+        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
+          <MiniCalendar
+            value={date}
+            onPick={(d) => {
+              setDate(d);
+              setCalendarOpen(false);
+            }}
+          />
+        </View>
+      )}
+
+      {!noteFocused && !calendarOpen && (
         <Animated.View
           entering={FadeIn.duration(180)}
           exiting={FadeOut.duration(120)}

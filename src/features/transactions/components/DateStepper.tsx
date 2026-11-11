@@ -1,18 +1,25 @@
 import { StyleSheet, View } from 'react-native';
 
-import { addDays, formatDayLabel, todayISO, type ISODate } from '@/shared/lib/dates';
+import { addDays, formatDayLabel, type ISODate } from '@/shared/lib/dates';
 import { haptics } from '@/shared/lib/haptics';
+import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
 import { Icon } from '@/shared/ui/Icon';
 import { PressableScale } from '@/shared/ui/PressableScale';
 import { Text } from '@/shared/ui/Text';
 
-type Props = { value: ISODate; onChange: (date: ISODate) => void };
+type Props = {
+  value: ISODate;
+  onChange: (date: ISODate) => void;
+  /** Tapping the date opens the calendar. */
+  onOpenCalendar: () => void;
+  calendarOpen: boolean;
+};
 
 /** "‹ Today ›" — step the date one day at a time. Future dates are not allowed. */
-export function DateStepper({ value, onChange }: Props) {
+export function DateStepper({ value, onChange, onOpenCalendar, calendarOpen }: Props) {
   const { colors, radius } = useTheme();
-  const today = todayISO();
+  const today = useUiStore((s) => s.today);
   const canGoForward = value < today;
 
   const step = (n: number) => {
@@ -26,8 +33,9 @@ export function DateStepper({ value, onChange }: Props) {
         <Icon name="chevron-back" size={18} color="textMuted" />
       </PressableScale>
       <PressableScale
-        onPress={() => value !== today && (haptics.select(), onChange(today))}
-        accessibilityLabel={`Date: ${formatDayLabel(value, today)}. Tap for today.`}
+        onPress={onOpenCalendar}
+        accessibilityLabel={`Date: ${formatDayLabel(value, today)}. Tap to pick a date.`}
+        accessibilityState={{ expanded: calendarOpen }}
         style={styles.label}
       >
         <Icon name="calendar-outline" size={16} color="textMuted" />

@@ -95,3 +95,21 @@ export function formatDayLabel(date: ISODate, today: ISODate = todayISO()): stri
   const base = `${WEEKDAYS_SHORT[d.getDay()]}, ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
   return date.slice(0, 4) === today.slice(0, 4) ? base : `${base} ${d.getFullYear()}`;
 }
+
+/**
+ * Calendar grid for a month, weeks starting on Monday.
+ * Each week has 7 cells: an ISO date, or null for days outside the month.
+ */
+export function monthGrid(month: MonthKey): (ISODate | null)[][] {
+  const [y, m] = month.split('-').map(Number);
+  const first = new Date(y, m - 1, 1).getDay(); // 0 Sun .. 6 Sat
+  const lead = (first + 6) % 7; // blanks before the 1st when weeks start Monday
+  const total = daysInMonth(month);
+  const cells: (ISODate | null)[] = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= total; d++) cells.push(`${month}-${pad(d)}`);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (ISODate | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
