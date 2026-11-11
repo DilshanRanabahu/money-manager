@@ -58,6 +58,15 @@ export const MIGRATIONS: string[] = [
     WHEN 'inc_other' THEN 16
     ELSE sort_order END;
   `,
+
+  // v3 — every expense category gets its own colour so the donut chart is readable.
+  // Must match DEFAULT_CATEGORIES (checked by migrations.test.ts).
+  `
+  UPDATE categories SET color = 'indigo' WHERE id = 'exp_education';
+  UPDATE categories SET color = 'red' WHERE id = 'exp_fun';
+  UPDATE categories SET color = 'brown' WHERE id = 'exp_family';
+  UPDATE categories SET color = 'cyan' WHERE id = 'exp_api_subs';
+  `,
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

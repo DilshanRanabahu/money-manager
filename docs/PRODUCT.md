@@ -53,10 +53,12 @@ A personal app that answers three questions, fast:
 ### 6. App lock (Settings → Security)
 - Optional. Turning it on **and** off asks for the fingerprint first, so nobody else can switch it off.
 - Needs a fingerprint or a phone screen lock; if the phone has neither, it says so.
-- When on: the app opens on a lock screen and asks for the fingerprint right away. The phone's PIN / pattern always works as a fallback, so the owner is never locked out.
+- When on: the app opens on a lock screen and asks for the fingerprint right away. Only strong biometrics (the fingerprint sensor, not camera face unlock). The phone's PIN / pattern always works as a fallback, so the owner is never locked out.
 - Locks again after leaving the app: **Immediately**, **1 min** or **5 min** (choice under the switch).
-- While the app is in the background its content is hidden, so recent apps show no amounts.
-- Opening the share sheet or file picker from the app does not trigger the lock.
+- While app lock is on, screenshots, screen recording and the recent-apps preview are blocked (Android FLAG_SECURE).
+- Opening the share sheet or file picker from the app does not lock it if you come back within a minute; leaving it open longer still locks.
+- Changing the phone's clock back does not skip the lock.
+- When the app locks, any open sheet or screen is closed first (unsaved input in it is dropped).
 
 ### 7. Backup
 - Export all data to a JSON file (share sheet).

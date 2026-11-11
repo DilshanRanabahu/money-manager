@@ -54,6 +54,11 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] App lock with fingerprint / phone screen lock, toggle in Settings, lock-again delay
 - [x] Breakdown: change vs last month, spending pace + month-end estimate, tap a category to see its entries
 
+## Security follow-ups
+- [ ] Encrypt the database with SQLCipher (`expo-sqlite` `useSQLCipher`), key in `expo-secure-store`; migrate the existing plaintext DB
+- [ ] Optional password-protected backup export
+- [ ] Check the final APK manifest for permissions Expo adds by default; block unused ones
+
 ## Later
 
 Pick from here only after a month of real use, based on what was actually missing.

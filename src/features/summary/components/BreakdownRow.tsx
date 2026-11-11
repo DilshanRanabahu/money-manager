@@ -22,10 +22,12 @@ type Props = {
   change?: Change | null;
   /** Open the category's entries. Omit for rows that can't be opened (carry-over). */
   onPress?: () => void;
+  /** Highlighted because its slice is selected in the donut. */
+  highlighted?: boolean;
 };
 
 /** Category · change vs last month · amount · percent, with a bar that grows into place. */
-export function BreakdownRow({ row, index, type, change, onPress }: Props) {
+export function BreakdownRow({ row, index, type, change, onPress, highlighted }: Props) {
   const { colors, spacing } = useTheme();
   const reduceMotion = useReducedMotion();
   const hue = colors.category[row.category.color] ?? colors.category.gray;
@@ -49,7 +51,7 @@ export function BreakdownRow({ row, index, type, change, onPress }: Props) {
       accessibilityHint={onPress ? 'Shows the entries in this category' : undefined}
       style={({ pressed }) => [
         styles.root,
-        { paddingVertical: spacing.sm + 2, gap: spacing.md, backgroundColor: pressed ? colors.surface : 'transparent' },
+        { paddingVertical: spacing.sm + 2, gap: spacing.md, backgroundColor: pressed || highlighted ? colors.surface : 'transparent' },
       ]}
     >
       <CategoryIcon category={row.category} />

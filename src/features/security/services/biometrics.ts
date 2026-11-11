@@ -27,6 +27,9 @@ export async function authenticate(promptMessage: string): Promise<Result<true, 
       cancelLabel: 'Cancel',
       disableDeviceFallback: false,
       requireConfirmation: false,
+      // Audit #3: only strong (Class 3) biometrics such as the fingerprint sensor.
+      // Camera face unlock (Class 2) can be fooled by a photo. The PIN stays as fallback.
+      biometricsSecurityLevel: 'strong',
     });
     if (result.success) return ok(true);
     switch (result.error) {

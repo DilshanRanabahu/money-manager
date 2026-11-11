@@ -1,18 +1,25 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 
 import type { TransactionType } from '@/features/categories';
-import { BreakdownRow, CARRY_CATEGORY_ID, ChangeTag, PaceCard, useBreakdownInsights } from '@/features/summary';
+import {
+  BreakdownRow,
+  CARRY_CATEGORY_ID,
+  ChangeTag,
+  DonutChart,
+  DonutLegend,
+  donutSlices,
+  PaceCard,
+  useBreakdownInsights,
+} from '@/features/summary';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
-import { AnimatedNumber } from '@/shared/ui/AnimatedNumber';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { MonthSwitcher } from '@/shared/ui/MonthSwitcher';
 import { Screen } from '@/shared/ui/Screen';
 import { SegmentedControl } from '@/shared/ui/SegmentedControl';
-import { Text } from '@/shared/ui/Text';
 
 const OPTIONS = [
   { value: 'expense', label: 'Spending' },
@@ -25,6 +32,11 @@ export default function BreakdownScreen() {
   const direction = useUiStore((s) => s.monthDirection);
   const [type, setType] = useState<TransactionType>('expense');
   const { total, rows, totalChange, compareLabel, pace, available, loading } = useBreakdownInsights(month, type);
+  const slices = useMemo(() => donutSlices(rows), [rows]);
+  // Selected slice; cleared when the month or tab changes.
+  const [selection, setSelection] = useState<{ key: string; id: string | null }>({ key: '', id: null });
+  const viewKey = `${month}-${type}`;
+  const selectedId = selection.key === viewKey ? selection.id : null;
 
   const openCategory = (id: string) => router.push({ pathname: '/category/[id]', params: { id } });
 
@@ -39,13 +51,18 @@ export default function BreakdownScreen() {
           <SegmentedControl options={OPTIONS} value={type} onChange={setType} />
         </View>
 
-        <View style={{ paddingTop: spacing.xl, paddingBottom: spacing.md }}>
-          <Text variant="caption" color="textMuted">
-            {type === 'expense' ? 'Total spent' : 'Total earned'}
-          </Text>
-          <AnimatedNumber value={total} variant="display" color={type === 'income' ? 'income' : 'text'} style={{ marginTop: spacing.xs }} />
+        <View style={[styles.chart, { paddingTop: spacing.xl, paddingBottom: spacing.lg }]}>
+          <DonutChart
+            slices={slices}
+            centerLabel={type === 'expense' ? 'Total spent' : 'Total earned'}
+            total={total}
+            tone={type === 'income' ? 'income' : 'text'}
+            selectedId={selectedId}
+            onSelect={(id) => setSelection({ key: viewKey, id })}
+          />
+          <DonutLegend slices={slices} selectedId={selectedId} onSelect={(id) => setSelection({ key: viewKey, id })} />
           {totalChange && (
-            <View style={{ marginTop: spacing.xs }}>
+            <View style={{ marginTop: spacing.md }}>
               <ChangeTag change={totalChange} type={type} suffix={compareLabel} />
             </View>
           )}
@@ -71,6 +88,7 @@ export default function BreakdownScreen() {
                 index={i}
                 type={type}
                 change={row.change}
+                highlighted={selectedId === row.category.id}
                 onPress={row.category.id === CARRY_CATEGORY_ID ? undefined : () => openCategory(row.category.id)}
               />
             ))
@@ -83,4 +101,5 @@ export default function BreakdownScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', marginLeft: -8 },
+  chart: { alignItems: 'center' },
 });

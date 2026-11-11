@@ -174,6 +174,7 @@ No server-state library is needed: there is no server.
 | 11 | Own query cache instead of SQLite change listener | The listener fired once per row (an import of 139 rows caused 139 refetches mid-transaction) and returned the previous month's data while a new month loaded. Explicit invalidation from repositories is predictable and testable. |
 | 12 | Inactive tab frozen (`freezeOnBlur`); rows only animate when new | Month switch measured at ~160 ms on a Samsung A06 with 100+ rows. |
 | 13 | Light list rows (own swipe row, plain `Pressable`) instead of `ReanimatedSwipeable` + `PressableScale` | Each row had ~10 Reanimated objects; creating them while scrolling caused stutter. Mid-scroll stalls went from 6 to 0–3 per test (dev mode). `failOffsetY` hands vertical drags to the list immediately. |
+| 14 | Security audit fixes (Nov 2026) | Lock timing uses wall + monotonic clocks and locks if the clock goes back; trips to our own system screens get only a 60 s grace; strong biometrics only; FLAG_SECURE while app lock is on; open modals are dismissed on lock; backup import has size/length/amount limits and type checks; old export files are removed from the cache at start. Not done yet: SQLCipher database encryption and password-protected export (need a native build). |
 | 10 | Service wired with injected ports | `createTransactionService({ transactions, categories })` lets tests use in-memory fakes; `services/instance.ts` wires the real repos. |
 
 When a decision changes, update this table and say why.

@@ -2,7 +2,10 @@ import type { TextStyle } from 'react-native';
 
 export type ColorScheme = 'light' | 'dark';
 
-export const categoryHues = ['orange', 'blue', 'green', 'purple', 'pink', 'teal', 'yellow', 'gray'] as const;
+export const categoryHues = [
+  'orange', 'blue', 'green', 'purple', 'pink', 'teal', 'yellow', 'gray',
+  'red', 'indigo', 'brown', 'cyan',
+] as const;
 export type CategoryHue = (typeof categoryHues)[number];
 
 type CategoryColor = { bg: string; fg: string };
@@ -49,6 +52,10 @@ const light: Palette = {
     teal: { bg: '#DDF2F1', fg: '#16797A' },
     yellow: { bg: '#FBF1D3', fg: '#93690B' },
     gray: { bg: '#ECECEA', fg: '#5B5B60' },
+    red: { bg: '#FCE4E2', fg: '#C9302C' },
+    indigo: { bg: '#E4E6FB', fg: '#3F48B8' },
+    brown: { bg: '#EFE5DC', fg: '#6E4526' },
+    cyan: { bg: '#DDF3FA', fg: '#0E7FA3' },
   },
 };
 
@@ -76,6 +83,10 @@ const dark: Palette = {
     teal: { bg: '#142C2C', fg: '#62CFCC' },
     yellow: { bg: '#332A12', fg: '#E8C25A' },
     gray: { bg: '#262629', fg: '#B4B4BA' },
+    red: { bg: '#3A1A19', fg: '#FF7A72' },
+    indigo: { bg: '#1E2140', fg: '#8F98FF' },
+    brown: { bg: '#2B211A', fg: '#A87B55' },
+    cyan: { bg: '#11303A', fg: '#4FD1F2' },
   },
 };
 

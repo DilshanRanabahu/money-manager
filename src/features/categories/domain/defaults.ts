@@ -10,12 +10,12 @@ const expense: Seed[] = [
   { id: 'exp_groceries', name: 'Groceries', type: 'expense', icon: 'basket-outline', color: 'green' },
   { id: 'exp_shopping', name: 'Shopping', type: 'expense', icon: 'bag-handle-outline', color: 'pink' },
   { id: 'exp_health', name: 'Health', type: 'expense', icon: 'medkit-outline', color: 'teal' },
-  { id: 'exp_education', name: 'Education', type: 'expense', icon: 'school-outline', color: 'purple' },
-  { id: 'exp_fun', name: 'Entertainment', type: 'expense', icon: 'film-outline', color: 'pink' },
-  { id: 'exp_family', name: 'Family', type: 'expense', icon: 'people-outline', color: 'orange' },
+  { id: 'exp_education', name: 'Education', type: 'expense', icon: 'school-outline', color: 'indigo' },
+  { id: 'exp_fun', name: 'Entertainment', type: 'expense', icon: 'film-outline', color: 'red' },
+  { id: 'exp_family', name: 'Family', type: 'expense', icon: 'people-outline', color: 'brown' },
   // Added in schema v2
   { id: 'exp_ai_subs', name: 'AI subscriptions', type: 'expense', icon: 'sparkles-outline', color: 'purple' },
-  { id: 'exp_api_subs', name: 'API subscriptions', type: 'expense', icon: 'code-slash-outline', color: 'teal' },
+  { id: 'exp_api_subs', name: 'API subscriptions', type: 'expense', icon: 'code-slash-outline', color: 'cyan' },
   { id: 'exp_other', name: 'Other', type: 'expense', icon: 'ellipsis-horizontal', color: 'gray' },
 ];
 

@@ -12,6 +12,21 @@ describe('migrations', () => {
   });
 });
 
+describe('migration v3 colours', () => {
+  it('match DEFAULT_CATEGORIES', () => {
+    for (const [, color, id] of MIGRATIONS[2].matchAll(/color = '([a-z]+)' WHERE id = '([a-z_]+)'/g)) {
+      expect(DEFAULT_CATEGORIES.find((c) => c.id === id)?.color).toBe(color);
+    }
+  });
+
+  it('give every category of a type its own colour', () => {
+    for (const type of ['expense', 'income'] as const) {
+      const colors = DEFAULT_CATEGORIES.filter((c) => c.type === type).map((c) => c.color);
+      expect(new Set(colors).size).toBe(colors.length);
+    }
+  });
+});
+
 describe('default categories', () => {
   it('have unique ids and the new subscription categories', () => {
     const ids = DEFAULT_CATEGORIES.map((c) => c.id);

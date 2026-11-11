@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DbProvider } from '@/db/DbProvider';
+import { cleanupOldExports } from '@/features/backup';
 import { AppLockOverlay, useAppLockLifecycle } from '@/features/security';
 import { transactionService } from '@/features/transactions';
 import { ThemeProvider, useTheme } from '@/shared/theme/ThemeProvider';
@@ -20,7 +21,10 @@ export default function RootLayout() {
       <ThemeProvider>
         <Themed>
           <DbProvider
-            onReady={() => transactionService.purge()}
+            onReady={async () => {
+              await transactionService.purge();
+              cleanupOldExports();
+            }}
             splash={<Splash />}
             renderError={(error, retry) => <StartupError message={error.message} onRetry={retry} />}
           >

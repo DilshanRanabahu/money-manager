@@ -1,11 +1,32 @@
-import { File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 import { categoryRepo } from '@/db/repositories/categoryRepo';
 import { transactionRepo } from '@/db/repositories/transactionRepo';
 import { todayISO } from '@/shared/lib/dates';
 import { err, ok, type Result } from '@/shared/lib/result';
-import { BACKUP_APP, BACKUP_VERSION, backupSchema, type Backup } from '../domain/backupSchema';
+import {
+  BACKUP_APP,
+  BACKUP_LIMITS,
+  BACKUP_VERSION,
+  backupSchema,
+  EXPORT_FILE_PREFIX,
+  type Backup,
+} from '../domain/backupSchema';
+
+/**
+ * Delete earlier export files from the app cache (audit #6). Run at app start: by then the
+ * share sheet has long finished with them. The copy the user saved elsewhere is untouched.
+ */
+export function cleanupOldExports(): void {
+  try {
+    for (const item of new Directory(Paths.cache).list()) {
+      if (item instanceof File && item.name.startsWith(EXPORT_FILE_PREFIX)) item.delete();
+    }
+  } catch {
+    // Best effort; never block start-up.
+  }
+}
 
 /** Write all data to a JSON file and open the share sheet. */
 export async function exportBackup(): Promise<Result<{ count: number }>> {
@@ -18,7 +39,8 @@ export async function exportBackup(): Promise<Result<{ count: number }>> {
       transactions: (await transactionRepo.allRows()) as Backup['transactions'],
     };
 
-    const file = new File(Paths.cache, `money-backup-${todayISO()}.json`);
+    cleanupOldExports();
+    const file = new File(Paths.cache, `${EXPORT_FILE_PREFIX}${todayISO()}.json`);
     if (file.exists) file.delete();
     file.create();
     file.write(JSON.stringify(backup, null, 2));
@@ -38,6 +60,9 @@ export async function pickBackup(): Promise<Result<Backup | null>> {
     // (expo-document-picker's cached copy was rejected by File.text() in Expo Go.)
     const picked = await File.pickFileAsync({ mimeTypes: ['application/json', 'text/plain', '*/*'] });
     if (picked.canceled || !picked.result) return ok(null);
+
+    // Audit #8: refuse huge files before reading them into memory.
+    if (picked.result.size > BACKUP_LIMITS.maxFileBytes) return err('This file is too large to be a Money backup');
 
     const text = await picked.result.text();
     let json: unknown;
