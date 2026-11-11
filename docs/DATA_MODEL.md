@@ -20,6 +20,10 @@
 
 - Text IDs generated on the device (UUID v4 or ULID), not auto-increment. This keeps import/export and future sync simple.
 
+## Storage
+
+One SQLite file, `money-secure.db`, encrypted with SQLCipher (AES-256, raw 256-bit key in `expo-secure-store`). In Expo Go, which has no SQLCipher, the plain `money.db` is used. On the first start of a SQLCipher build an existing `money.db` is copied into the encrypted file and deleted (see `src/db/client.ts`). Settings live in a separate unencrypted kv-store (no money data).
+
 ## Tables
 
 ### `categories`

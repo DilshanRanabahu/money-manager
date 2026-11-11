@@ -9,6 +9,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { SegmentedControl } from '@/shared/ui/SegmentedControl';
 import { Text } from '@/shared/ui/Text';
 import { authenticate, canProtect } from '../services/biometrics';
+import { isDataEncrypted } from '../services/storage';
 import { useLockStore, withoutLocking } from '../store/lockStore';
 
 const LOCK_AFTER = [
@@ -82,6 +83,21 @@ export function AppLockSettings() {
           </View>
         </Animated.View>
       )}
+
+      <View style={[styles.divider, { backgroundColor: colors.divider, marginLeft: 56 }]} />
+      <View style={[styles.row, { padding: spacing.lg }]}>
+        <Icon name={isDataEncrypted() ? 'lock-closed-outline' : 'lock-open-outline'} size={22} color="textMuted" />
+        <View style={styles.text}>
+          <Text variant="body" style={styles.label}>
+            {isDataEncrypted() ? 'Data encrypted' : 'Data not encrypted'}
+          </Text>
+          <Text variant="caption" color="textMuted">
+            {isDataEncrypted()
+              ? 'AES-256 on this phone. Use Export to move to a new phone.'
+              : 'Encryption needs the installed app (not Expo Go).'}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }

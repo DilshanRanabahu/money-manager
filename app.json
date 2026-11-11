@@ -12,17 +12,24 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F7F7F5",
+        "backgroundColor": "#111113",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.dilshanranabahu.money",
-      "allowBackup": true,
+      "allowBackup": false,
       "permissions": [
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -30,7 +37,12 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite",
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
       "expo-sharing",
       "expo-font",
       [
@@ -39,7 +51,16 @@
           "faceIDPermission": "Allow Money to use Face ID to unlock the app."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "backgroundColor": "#F7F7F5",
+          "dark": { "image": "./assets/splash-icon-dark.png", "backgroundColor": "#0E0E10" }
+        }
+      ]
     ],
     "scheme": "moneymanager",
     "experiments": {

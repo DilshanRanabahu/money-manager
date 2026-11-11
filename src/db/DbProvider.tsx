@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { getDb } from './client';
+import { DatabaseKeyLostError, eraseUnreadableDb, openAppDb } from './client';
 import { migrate } from './migrations';
 import { seed } from './seed';
 
@@ -12,7 +12,8 @@ type Props = {
   /** Shown while the database is preparing. */
   splash: ReactNode;
   /** Shown if preparation fails. */
-  renderError: (error: Error, retry: () => void) => ReactNode;
+  /** `erase` is given only when the data can't be decrypted (it deletes it). */
+  renderError: (error: Error, retry: () => void, erase?: () => Promise<void>) => ReactNode;
 };
 
 /** Opens the database, runs migrations and seed, and only then renders the app. */
@@ -24,7 +25,7 @@ export function DbProvider({ children, onReady, splash, renderError }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const db = getDb();
+        const db = await openAppDb();
         await migrate(db);
         await seed(db);
         await onReady?.();
@@ -43,10 +44,20 @@ export function DbProvider({ children, onReady, splash, renderError }: Props) {
   if (state instanceof Error) {
     return (
       <View style={styles.fill}>
-        {renderError(state, () => {
-          setState('loading');
-          setAttempt((a) => a + 1);
-        })}
+        {renderError(
+          state,
+          () => {
+            setState('loading');
+            setAttempt((a) => a + 1);
+          },
+          state instanceof DatabaseKeyLostError
+            ? async () => {
+                await eraseUnreadableDb();
+                setState('loading');
+                setAttempt((a) => a + 1);
+              }
+            : undefined,
+        )}
       </View>
     );
   }

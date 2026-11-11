@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DbProvider } from '@/db/DbProvider';
@@ -28,7 +28,7 @@ export default function RootLayout() {
               cleanupOldExports();
             }}
             splash={<Splash />}
-            renderError={(error, retry) => <StartupError message={error.message} onRetry={retry} />}
+            renderError={(error, retry, erase) => <StartupError message={error.message} onRetry={retry} onErase={erase} />}
           >
             <RootStack />
           </DbProvider>
@@ -81,7 +81,15 @@ function Splash() {
   return <View style={[styles.fill, { backgroundColor: colors.bg }]} />;
 }
 
-function StartupError({ message, onRetry }: { message: string; onRetry: () => void }) {
+function StartupError({
+  message,
+  onRetry,
+  onErase,
+}: {
+  message: string;
+  onRetry: () => void;
+  onErase?: () => Promise<void>;
+}) {
   const { colors, spacing } = useTheme();
   return (
     <View style={[styles.fill, styles.center, { backgroundColor: colors.bg, padding: spacing.xl }]}>
@@ -92,6 +100,19 @@ function StartupError({ message, onRetry }: { message: string; onRetry: () => vo
         {message}
       </Text>
       <Button label="Try again" onPress={onRetry} />
+      {onErase && (
+        <Button
+          label="Erase and start over"
+          variant="ghost"
+          style={{ marginTop: spacing.md }}
+          onPress={() =>
+            Alert.alert('Erase all data?', 'The encrypted data on this phone will be deleted. You can then import a backup file.', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Erase', style: 'destructive', onPress: () => void onErase() },
+            ])
+          }
+        />
+      )}
     </View>
   );
 }

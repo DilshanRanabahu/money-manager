@@ -39,7 +39,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Check the light theme on the device
 
 ## Milestone 5 — Release for myself
-- [ ] App icon and splash
+- [x] App icon and splash (minimal wallet, `scripts/make-icon.py`)
 - [ ] Standalone Android build (EAS build or `npx expo run:android`), so Expo Go is not needed
 - [ ] Use it for a full month; write down what was annoying
 
@@ -58,9 +58,10 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Test Ask Money on the device with a real key (Expo Go streaming via `expo/fetch`; `metro.config.js` forces the SDK's CommonJS build)
 
 ## Security follow-ups
-- [ ] Encrypt the database with SQLCipher (`expo-sqlite` `useSQLCipher`), key in `expo-secure-store`; migrate the existing plaintext DB
+- [x] Encrypt the database with SQLCipher (`expo-sqlite` `useSQLCipher`), key in `expo-secure-store`; migrate the existing plaintext DB; `allowBackup` off
+- [ ] Verify encryption on an installed build (Expo Go has no SQLCipher and keeps the plain DB)
 - [ ] Optional password-protected backup export
-- [ ] Check the final APK manifest for permissions Expo adds by default; block unused ones
+- [x] Block unused permissions Expo libraries add (storage, media images, overlay, audio) via `android.blockedPermissions`
 
 ## Later
 
