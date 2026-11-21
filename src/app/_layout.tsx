@@ -6,11 +6,13 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DbProvider } from '@/db/DbProvider';
+import { purgeOldChats } from '@/features/assistant';
 import { cleanupOldExports } from '@/features/backup';
 import { useReminderSync, useReminderTap } from '@/features/reminders';
 import { AppLockOverlay, useAppLockLifecycle } from '@/features/security';
 import { transactionService } from '@/features/transactions';
 import { useDayRollover } from '@/shared/hooks/useDayRollover';
+import { todayISO } from '@/shared/lib/dates';
 import { ThemeProvider, useTheme } from '@/shared/theme/ThemeProvider';
 import { Button } from '@/shared/ui/Button';
 import { Text } from '@/shared/ui/Text';
@@ -26,6 +28,7 @@ export default function RootLayout() {
           <DbProvider
             onReady={async () => {
               await transactionService.purge();
+              await purgeOldChats(todayISO());
               cleanupOldExports();
             }}
             splash={<Splash />}
@@ -72,7 +75,9 @@ function RootStack() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
-      <Stack.Screen name="assistant" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="assistant/index" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="assistant/history" options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="assistant/day/[day]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="category/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="transaction/new" options={sheet} />
       <Stack.Screen name="transaction/[id]" options={sheet} />

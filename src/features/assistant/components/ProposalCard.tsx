@@ -8,7 +8,7 @@ import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
 import { Button } from '@/shared/ui/Button';
 import { Text } from '@/shared/ui/Text';
-import type { ChatItem } from '../hooks/useChat';
+import type { ChatItem } from '../domain/types';
 
 type Item = Extract<ChatItem, { kind: 'proposal' }>;
 type Row = { type: 'income' | 'expense'; amount: number; category: Category; date: ISODate; note: string | null };
@@ -20,12 +20,14 @@ export function ProposalCard({
   onUndo,
 }: {
   item: Item;
-  onRespond: (id: string, ok: boolean) => void;
-  onUndo: (id: string, entryId: string) => void;
+  /** Omitted in saved chats (read-only). */
+  onRespond?: (id: string, ok: boolean) => void;
+  onUndo?: (id: string, entryId: string) => void;
 }) {
   const { colors, spacing, radius } = useTheme();
   const { proposal: p, status } = item;
-  const pending = status === 'pending';
+  const pending = status === 'pending' && !!onRespond;
+  const canUndo = !item.past && !!onUndo;
 
   const copy = {
     entries: {
@@ -99,18 +101,22 @@ export function ProposalCard({
 
       {pending ? (
         <View style={[styles.row, { gap: spacing.sm }]}>
-          <Button label="Not now" variant="secondary" onPress={() => onRespond(item.id, false)} style={styles.fill} />
-          <Button label={copy.yes} onPress={() => onRespond(item.id, true)} style={styles.fill} />
+          <Button label="Not now" variant="secondary" onPress={() => onRespond?.(item.id, false)} style={styles.fill} />
+          <Button label={copy.yes} onPress={() => onRespond?.(item.id, true)} style={styles.fill} />
         </View>
-      ) : p.kind === 'delete' && status === 'saved' ? (
+      ) : status === 'expired' || status === 'pending' ? (
+        <Text variant="caption" color="textFaint">
+          Not answered · ask again to add it
+        </Text>
+      ) : p.kind === 'delete' && status === 'saved' && canUndo ? (
         <View style={[styles.row, styles.between]}>
           <Text variant="caption" color="expense">
             {copy.saved}
           </Text>
-          <Button label="Undo" variant="ghost" onPress={() => onUndo(item.id, p.entry.id)} style={styles.undo} />
+          <Button label="Undo" variant="ghost" onPress={() => onUndo?.(item.id, p.entry.id)} style={styles.undo} />
         </View>
       ) : (
-        <Text variant="caption" color={status === 'saved' ? 'income' : 'textMuted'}>
+        <Text variant="caption" color={status === 'saved' ? (p.kind === 'delete' ? 'expense' : 'income') : 'textMuted'}>
           {status === 'undone' ? '↺ Restored' : status === 'saved' ? copy.saved : copy.declined}
         </Text>
       )}

@@ -25,6 +25,9 @@ export type Palette = {
   incomeSoft: string;
   expenseSoft: string;
   backdrop: string;
+  /** Full-screen photo viewer (always dark, both themes). */
+  photoBackdrop: string;
+  onPhoto: string;
   category: Record<CategoryHue, CategoryColor>;
 };
 
@@ -43,6 +46,8 @@ const light: Palette = {
   incomeSoft: '#E3F5E9',
   expenseSoft: '#FCE8E8',
   backdrop: 'rgba(0,0,0,0.3)',
+  photoBackdrop: 'rgba(0,0,0,0.92)',
+  onPhoto: '#FFFFFF',
   category: {
     orange: { bg: '#FDEBDD', fg: '#C2581C' },
     blue: { bg: '#E1ECFD', fg: '#2B63C8' },
@@ -74,6 +79,8 @@ const dark: Palette = {
   incomeSoft: '#13291B',
   expenseSoft: '#33181A',
   backdrop: 'rgba(0,0,0,0.6)',
+  photoBackdrop: 'rgba(0,0,0,0.92)',
+  onPhoto: '#FFFFFF',
   category: {
     orange: { bg: '#3A2416', fg: '#F7A26B' },
     blue: { bg: '#172438', fg: '#7FAEF5' },

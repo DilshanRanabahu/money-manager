@@ -74,7 +74,10 @@ A personal app that answers three questions, fast:
 - "The bus was 180 not 160" / "delete yesterday's KFC" → Claude finds the entry and shows a before → after card (edit) or a delete card. Deletes can be undone from the card until the app restarts.
 - 📷 Receipts: take or choose a photo; it is resized (max 1568 px, JPEG) and sent with the message. Claude reads the shop, date and total and proposes an entry card. The camera permission is asked only when you take a photo; choosing one uses Android's photo picker (no storage permission).
 - "Add a Fuel expense category" → Claude proposes a new income/expense category (name, icon from a fixed set, unused colour) as a card; saved only on **Create**. Names are unique per type; new categories sit before "Other". This is the only way to add categories for now (no rename/archive yet).
-- Model: Haiku 5.5 (default, cheap) or Opus 5.5. Chat history lives in memory only and is gone when you leave the screen.
+- Model: Haiku 5.5 (default, cheap) or Opus 5.5.
+- **Chat history, one chat per day.** Messages, cards and receipt photos are saved on the phone (in the encrypted database). Reopening Ask Money the same day shows today's earlier messages as a snapshot above a divider; Claude does not see them and starts fresh below. The next day starts an empty chat.
+- 🕘 **History** (top right of the chat): days with a chat, newest first, grouped by month, with the first question as preview. A past day opens read-only (tap a photo to see it full screen; unanswered cards show as not answered; no Undo). A day's chat can be deleted from there.
+- Chats are kept for **90 days** (older ones are removed at app start) and are **not** in JSON backups.
 
 ### 9. Daily reminder (Settings → Reminders)
 - Off by default. When on, a local notification at 8, 9 or 10 PM, **only on days with nothing logged** (any entry dated today counts).
@@ -84,7 +87,7 @@ A personal app that answers three questions, fast:
 
 ## Not in v1 (on purpose)
 
-Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · push notifications · widgets · receipt photos · managing categories in the UI (rename / reorder / archive; adding works through Ask Money).
+Budgets and limits · charts · recurring transactions · multiple accounts/wallets · multiple currencies · cloud sync · login · push notifications · widgets · managing categories in the UI (rename / reorder / archive; adding works through Ask Money).
 
 These live in [ROADMAP.md](ROADMAP.md#later). We only add one when v1 is used daily and the need is real.
 

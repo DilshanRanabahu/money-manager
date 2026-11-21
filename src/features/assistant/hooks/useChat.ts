@@ -4,24 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { haptics } from '@/shared/lib/haptics';
 import { newId } from '@/shared/lib/id';
 import { useSettingsStore } from '@/shared/store/settingsStore';
+import { useUiStore } from '@/shared/store/uiStore';
+import type { Attachment, ChatItem } from '../domain/types';
 import { loadApiKey } from '../services/apiKey';
 import { describeError, makeClient, MAX_HISTORY, runTurn } from '../services/chatEngine';
+import { createChatSaver, loadChatDay } from '../services/chatHistory';
 import { assistantData, restoreEntry } from '../services/data';
-import type { Card, Proposal } from '../services/tools';
 import { toolLabel } from '../services/toolLabel';
 
-export type ProposalStatus = 'pending' | 'saved' | 'declined' | 'undone';
-
-/** A photo attached to a message (already resized, JPEG). */
-export type Attachment = { uri: string; base64: string };
-
-export type ChatItem =
-  | { id: string; kind: 'user'; text: string; imageUri?: string }
-  | { id: string; kind: 'assistant'; text: string }
-  | { id: string; kind: 'proposal'; proposal: Proposal; status: ProposalStatus }
-  | { id: string; kind: 'error'; text: string }
-  /** What a tool looked at, with its card (real numbers from the phone). */
-  | { id: string; kind: 'tool'; label: string; ok: boolean; card?: Card };
+export type { Attachment, ChatItem, ProposalStatus } from '../domain/types';
 
 /** Shown next to the typing dots while a tool runs. */
 const TOOL_ACTIVITY: Record<string, string> = {
@@ -37,20 +28,30 @@ const TOOL_ACTIVITY: Record<string, string> = {
 
 const nextId = newId;
 
+/** Wait this long after the last change before saving (streaming text changes often). */
+const SAVE_DELAY_MS = 400;
+
 /**
- * One chat session, kept in memory only: leaving the screen ends it.
- * Nothing from the chat is written to the database except entries the user confirms.
+ * Today's chat. Messages are saved on the phone (one conversation per day) and shown again
+ * when the chat is reopened, but Claude only sees what was said since the screen opened:
+ * earlier messages are a read-only snapshot above a divider.
  */
 export function useChat() {
   const model = useSettingsStore((s) => s.assistantModel);
   const enabled = useSettingsStore((s) => s.assistant);
   const [items, setItems] = useState<ChatItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [activity, setActivity] = useState<string | null>(null);
 
   const history = useRef<Anthropic.MessageParam[]>([]);
   const abort = useRef<AbortController | null>(null);
   const waiting = useRef(new Map<string, (ok: boolean) => void>());
+
+  // The conversation belongs to the day it was opened, even if it runs past midnight.
+  const [day] = useState(() => useUiStore.getState().today);
+  const [saver] = useState(() => createChatSaver(day));
+  const latest = useRef<ChatItem[]>([]);
 
   useEffect(() => {
     const pending = waiting.current;
@@ -60,6 +61,45 @@ export function useChat() {
       pending.clear();
     };
   }, []);
+
+  // Show what was said earlier today. Claude starts fresh below the divider.
+  useEffect(() => {
+    let cancelled = false;
+    loadChatDay(day)
+      .then((earlier) => {
+        if (cancelled) return;
+        saver.seed(earlier);
+        if (earlier.length > 0) {
+          setItems((list) => [
+            ...earlier,
+            { id: nextId(), kind: 'divider', text: "New conversation · Claude doesn't see the messages above" },
+            ...list,
+          ]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [day, saver]);
+
+  // Save changes shortly after they happen, and right away when the screen closes.
+  useEffect(() => {
+    latest.current = items;
+    if (!loaded) return;
+    const timer = setTimeout(() => void saver.save(items).catch(() => {}), SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [items, loaded, saver]);
+
+  useEffect(
+    () => () => {
+      void saver.save(latest.current).catch(() => {});
+    },
+    [saver],
+  );
 
   const patch = useCallback((id: string, fn: (item: ChatItem) => ChatItem) => {
     setItems((list) => list.map((i) => (i.id === id ? fn(i) : i)));
@@ -105,7 +145,9 @@ export function useChat() {
         return;
       }
 
-      setItems((list) => [...list, { id: nextId(), kind: 'user', text: raw.trim(), imageUri: image?.uri }]);
+      const userId = nextId();
+      if (image) saver.attachImage(userId, image.base64);
+      setItems((list) => [...list, { id: userId, kind: 'user', text: raw.trim(), imageUri: image?.uri }]);
       setBusy(true);
       setActivity('');
 
@@ -186,8 +228,8 @@ export function useChat() {
         }
       }
     },
-    [busy, enabled, model, patch],
+    [busy, enabled, model, patch, saver],
   );
 
-  return { items, busy, activity, send, respond, undo };
+  return { items, loaded, busy, activity, send, respond, undo };
 }

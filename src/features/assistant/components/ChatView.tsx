@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { haptics } from '@/shared/lib/haptics';
@@ -10,11 +10,11 @@ import { useTheme } from '@/shared/theme/ThemeProvider';
 import { Icon } from '@/shared/ui/Icon';
 import { PressableScale } from '@/shared/ui/PressableScale';
 import { Text } from '@/shared/ui/Text';
-import { useChat, type Attachment, type ChatItem } from '../hooks/useChat';
+import type { Attachment, ChatItem } from '../domain/types';
+import { useChat } from '../hooks/useChat';
 import { pickImage } from '../services/receiptImage';
-import { ProposalCard } from './ProposalCard';
-import { RichText } from './RichText';
-import { ToolCard } from './ToolCard';
+import { ChatMessage } from './ChatMessage';
+import { ImageViewer } from './ImageViewer';
 import { TypingDots } from './TypingDots';
 
 const SUGGESTIONS = [
@@ -29,15 +29,18 @@ const SUGGESTIONS = [
 export function ChatView() {
   const { colors, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { items, busy, activity, send, respond, undo } = useChat();
+  const { items, loaded, busy, activity, send, respond, undo } = useChat();
   const showToast = useUiStore((s) => s.showToast);
   const [text, setText] = useState('');
   const [image, setImage] = useState<Attachment | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
   const list = useRef<FlatList<ChatItem>>(null);
-  const canSend = !busy && (!!text.trim() || !!image);
+  const ready = loaded && !busy;
+  const canSend = ready && (!!text.trim() || !!image);
+  const openImage = useCallback((uri: string) => setViewing(uri), []);
 
   const submit = (value = text) => {
-    if (busy || (!value.trim() && !image)) return;
+    if (!ready || (!value.trim() && !image)) return;
     setText('');
     setImage(null);
     void send(value, image ?? undefined);
@@ -72,6 +75,14 @@ export function ChatView() {
         <Text variant="title" numberOfLines={1} style={styles.fill}>
           Ask Money
         </Text>
+        <PressableScale
+          onPress={() => router.push('/assistant/history')}
+          accessibilityLabel="Chat history"
+          style={styles.back}
+          pressedScale={0.88}
+        >
+          <Icon name="time-outline" size={23} color="textMuted" />
+        </PressableScale>
       </View>
 
       <FlatList
@@ -82,7 +93,7 @@ export function ChatView() {
         contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
-        ListEmptyComponent={<Suggestions onPick={submit} />}
+        ListEmptyComponent={loaded ? <Suggestions onPick={submit} /> : undefined}
         ListFooterComponent={
           activity !== null ? (
             <Animated.View entering={FadeIn.duration(160)}>
@@ -90,7 +101,7 @@ export function ChatView() {
             </Animated.View>
           ) : undefined
         }
-        renderItem={({ item }) => <Message item={item} onRespond={respond} onUndo={undo} />}
+        renderItem={({ item }) => <ChatMessage item={item} onRespond={respond} onUndo={undo} onOpenImage={openImage} />}
       />
 
       {image && (
@@ -120,7 +131,7 @@ export function ChatView() {
       >
         <PressableScale
           onPress={chooseSource}
-          disabled={busy}
+          disabled={!ready}
           accessibilityLabel="Add a receipt photo"
           style={[styles.send, { backgroundColor: colors.surface, borderRadius: radius.full }]}
         >
@@ -152,6 +163,7 @@ export function ChatView() {
           <Icon name="arrow-up" size={20} color="onAccent" />
         </PressableScale>
       </View>
+      <ImageViewer uri={viewing} onClose={() => setViewing(null)} />
     </KeyboardAvoidingView>
   );
 }
@@ -179,67 +191,16 @@ function Suggestions({ onPick }: { onPick: (s: string) => void }) {
   );
 }
 
-function Message({
-  item,
-  onRespond,
-  onUndo,
-}: {
-  item: ChatItem;
-  onRespond: (id: string, ok: boolean) => void;
-  onUndo: (id: string, entryId: string) => void;
-}) {
-  const { colors, radius, spacing } = useTheme();
-
-  if (item.kind === 'user') {
-    return (
-      <Animated.View
-        entering={FadeInDown.duration(180)}
-        style={[styles.bubble, styles.mine, { backgroundColor: colors.accent, borderRadius: radius.lg, gap: spacing.sm }]}
-      >
-        {item.imageUri && <Image source={{ uri: item.imageUri }} style={[styles.sent, { borderRadius: radius.md }]} />}
-        {!!item.text && (
-          <Text variant="body" color="onAccent">
-            {item.text}
-          </Text>
-        )}
-      </Animated.View>
-    );
-  }
-  if (item.kind === 'assistant') {
-    return (
-      <Animated.View entering={FadeIn.duration(180)} style={[styles.bubble, { backgroundColor: colors.surface, borderRadius: radius.lg }]}>
-        <RichText text={item.text} />
-      </Animated.View>
-    );
-  }
-  if (item.kind === 'error') {
-    return (
-      <Animated.View entering={FadeIn.duration(180)} style={[styles.bubble, { backgroundColor: colors.expenseSoft, borderRadius: radius.lg }]}>
-        <Text variant="caption" color="expense">
-          {item.text}
-        </Text>
-      </Animated.View>
-    );
-  }
-  if (item.kind === 'tool') return <ToolCard label={item.label} card={item.card} />;
-  return <ProposalCard item={item} onRespond={onRespond} onUndo={onUndo} />;
-}
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: -10, height: 52 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: -10, height: 52 },
   back: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  bubble: { paddingHorizontal: 14, paddingVertical: 10, maxWidth: '85%', alignSelf: 'flex-start' },
-  mine: { alignSelf: 'flex-end' },
-  bold: { fontWeight: '600' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  cardRow: { flexDirection: 'row', alignItems: 'center' },
   composer: { flexDirection: 'row', alignItems: 'flex-end', borderTopWidth: StyleSheet.hairlineWidth },
   input: { flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 14, paddingTop: 11, paddingBottom: 11 },
   send: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   preview: { flexDirection: 'row' },
   thumb: { width: 64, height: 64 },
   remove: { position: 'absolute', top: 2, left: 54, width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  sent: { width: 180, height: 180 },
 });
