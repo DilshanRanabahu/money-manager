@@ -59,6 +59,22 @@ One SQLite file, `money-secure.db`, encrypted with SQLCipher (AES-256, raw 256-b
 
 Every read query filters `deleted_at IS NULL`.
 
+### `chat_messages` (schema v4)
+
+Ask Money chat history. One conversation per local day; kept 90 days; never exported in backups.
+
+| Column       | Type    | Notes                                                        |
+| ------------ | ------- | ------------------------------------------------------------ |
+| `id`         | text PK | chat item id                                                 |
+| `day`        | text    | `YYYY-MM-DD` the chat was opened                             |
+| `seq`        | integer | order within the day                                         |
+| `kind`       | text    | `user` / `assistant` / `tool` / `proposal`                   |
+| `payload`    | text    | the item as JSON (without id; cards keep their real numbers) |
+| `image`      | text    | nullable; resized receipt photo, JPEG base64 (user messages) |
+| `created_at` | integer | ms                                                           |
+
+**Index:** `idx_chat_day` on (`day`, `seq`). Saved with `ON CONFLICT(id) DO UPDATE` (payload and order only; the photo is written once). `purgeBefore(today − 89 days)` runs at app start. Backup import does not touch this table.
+
 ### Schema source
 
 The tables are created by the SQL in `src/db/migrations.ts`. Repositories in `src/db/repositories` map rows to domain types.

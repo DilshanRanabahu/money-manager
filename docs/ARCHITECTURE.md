@@ -45,6 +45,7 @@ money-manager/
 │   │   │   ├── index.tsx         # Home (month view)
 │   │   │   └── breakdown.tsx     # Per-category breakdown
 │   │   ├── settings.tsx          # Backup, theme, about (pushed from Home)
+│   │   ├── assistant/            # index (chat), history (days list), day/[day] (read-only day)
 │   │   └── transaction/
 │   │       ├── new.tsx           # Add sheet (formSheet presentation)
 │   │       └── [id].tsx          # Edit sheet
@@ -79,11 +80,15 @@ money-manager/
 │   │   │   ├── hooks/            # useReminderSync (re-schedule on data/setting/day change), useReminderTap
 │   │   │   └── components/       # ReminderSettings
 │   │   ├── assistant/            # "Ask Money" chat (only feature that uses the network)
-│   │   │   ├── services/         # tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
+│   │   │   ├── services/         # chatHistory.ts (chatRepo: save queue, load day, list days, purge),
+│   │   │   │                     #   tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
 │   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos),
 │   │   │   │                     #   richText.ts + toolLabel.ts (pure, tested; tools also return UI cards)
-│   │   │   ├── hooks/            # useChat (in-memory session, confirm cards)
-│   │   │   └── components/       # ChatView, ToolCard, RichText, TypingDots, AssistantSettings
+│   │   │   ├── domain/           # types.ts (ChatItem), chatHistory.ts (save/restore items, 90-day cutoff; pure, tested)
+│   │   │   ├── hooks/            # useChat (today's chat: loads earlier messages as a snapshot, saves changes),
+│   │   │   │                     #   useChatHistory (useChatDays, useChatDay)
+│   │   │   └── components/       # ChatView, ChatMessage, ChatHistoryList, ChatDayView, ImageViewer, ScreenHeader,
+│   │   │                         #   ProposalCard, ToolCard, RichText, TypingDots, AssistantSettings
 │   │   └── backup/
 │   │       ├── services/         # exportData.ts, importData.ts
 │   │       ├── domain/           # backupSchema.ts (Zod)
@@ -98,7 +103,8 @@ money-manager/
 │   │   ├── useQuery.ts           # React hook over queryCache (useSyncExternalStore)
 │   │   └── repositories/
 │   │       ├── transactionRepo.ts
-│   │       └── categoryRepo.ts
+│   │       ├── categoryRepo.ts
+│   │       └── chatRepo.ts       # Ask Money history (chat_messages)
 │   │
 │   ├── shared/
 │   │   ├── ui/                   # Text, Button, TabBar, ToastHost, PressableScale, AnimatedNumber, MonthSwitcher...
@@ -157,6 +163,7 @@ Delete uses **soft delete + undo**: the service sets `deleted_at`, the toast off
 | State                                  | Where                          |
 | -------------------------------------- | ------------------------------ |
 | Transactions, categories (persistent)  | SQLite, read through `useQuery` / `queryCache` |
+| Ask Money chat history (90 days)       | SQLite `chat_messages`; the live chat keeps it in `useChat` state and saves changes (debounced) |
 | Theme preference, last used category   | `expo-sqlite/kv-store` via `settingsStore` |
 | Selected month, sheet open, toast      | Zustand `uiStore`              |
 | Form input while typing                | Local component state          |

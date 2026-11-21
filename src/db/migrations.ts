@@ -67,6 +67,22 @@ export const MIGRATIONS: string[] = [
   UPDATE categories SET color = 'brown' WHERE id = 'exp_family';
   UPDATE categories SET color = 'cyan' WHERE id = 'exp_api_subs';
   `,
+
+  // v4 — Ask Money chat history, one conversation per day, kept 90 days. Not in backups.
+  // `payload` is the message as JSON; `image` is the resized receipt photo (JPEG, base64).
+  `
+  CREATE TABLE chat_messages (
+    id TEXT PRIMARY KEY NOT NULL,
+    day TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    image TEXT,
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE INDEX idx_chat_day ON chat_messages (day, seq);
+  `,
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

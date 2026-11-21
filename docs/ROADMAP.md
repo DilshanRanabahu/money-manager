@@ -40,7 +40,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 
 ## Milestone 5 — Release for myself
 - [x] App icon and splash (minimal wallet, `scripts/make-icon.py`)
-- [ ] Standalone Android build (EAS build or `npx expo run:android`), so Expo Go is not needed
+- [x] Standalone Android build (EAS build or `npx expo run:android`), so Expo Go is not needed (EAS `preview` APK, versionCode 5, installed via adb 2026-11-21)
 - [ ] Use it for a full month; write down what was annoying
 
 ## Known issues / follow-ups
@@ -57,6 +57,8 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Ask Money can create new income/expense categories (confirm card)
 - [x] Daily reminder notification on days with nothing logged (8/9/10 PM, tap opens the add sheet)
 - [x] Ask Money: several entries per message on one card, edit / delete entries (before → after, undo), receipt photos
+- [x] Ask Money chat history: one chat per day saved on the phone (photos too), read-only past days, 90 days, not in backups
+- [ ] Test chat history on the device (reopen today's chat, open a past day, photo viewer, delete a day)
 - [x] Test receipt photos on the device (sample receipt through the resize → Claude pipeline: total, date and shop read correctly; the system photo picker and camera themselves still to try with a real receipt)
 - [x] Test Ask Money on the device with a real key (Expo Go streaming via `expo/fetch`; `metro.config.js` forces the SDK's CommonJS build)
 

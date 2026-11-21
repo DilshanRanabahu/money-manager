@@ -28,6 +28,8 @@ All values come from `src/shared/theme/tokens.ts`. Components never hard-code co
 | `accent`         | `#111113`   | `#F4F4F5`   | primary button (monochrome)  |
 | `income`         | `#16A34A`   | `#4ADE80`   | income amounts               |
 | `expense`        | `#E5484D`   | `#FF6B6F`   | expense amounts              |
+| `photoBackdrop`  | `rgba(0,0,0,0.92)` | same | full-screen photo viewer      |
+| `onPhoto`        | `#FFFFFF`   | `#FFFFFF`   | icons on the photo viewer    |
 | `cat.*`          | soft pastel set (8 hues) with matching dark variants | category chips & icons |
 
 The accent is intentionally monochrome (black/white). Color is saved for money direction.
