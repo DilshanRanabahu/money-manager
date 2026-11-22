@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
-import { TransactionForm, useTransaction, useTransactionActions } from '@/features/transactions';
+import { confirmDeleteEntry, TransactionForm, useTransaction, useTransactionActions } from '@/features/transactions';
 import { monthOf } from '@/shared/lib/dates';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
@@ -32,10 +32,14 @@ export default function EditTransactionSheet() {
         setMonth(monthOf(saved.occurredOn));
         router.back();
       }}
-      onDelete={() => {
-        router.back();
-        void remove(transaction.id);
-      }}
+      onDelete={() =>
+        confirmDeleteEntry(transaction, {
+          onDelete: () => {
+            router.back();
+            void remove(transaction.id);
+          },
+        })
+      }
     />
   );
 }

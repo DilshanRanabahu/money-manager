@@ -130,12 +130,13 @@ Export data · Import data · Theme (System / Light / Dark) · App version.
 | ---------------- | ----------------------------------------------------- |
 | `Text`           | typed variants from typography tokens                 |
 | `PressableScale` | pressable with scale-down + optional haptic           |
-| `Button`         | primary / secondary / ghost                           |
+| `Button`         | primary / secondary / ghost / danger (soft red)       |
 | `AnimatedNumber` | rolls between values for amounts                      |
 | `TabBar`         | two tabs + centered add button, animated active dot   |
 | `MonthSwitcher`  | ‹ month › bound to `uiStore`; tap title for current month |
 | `SegmentedControl` | sliding indicator toggle                            |
 | `Toast`          | bottom toast with action (Undo)                       |
+| `ConfirmHost`    | themed confirm dialog (`uiStore.askConfirm`): icon in a soft circle, title, message, optional preview, Cancel + confirm buttons. A `Modal`, so it shows above form sheets; cancelled when the app locks. Used instead of the native `Alert` for deleting entries |
 | `EmptyState`     | icon + one line + hint                                |
 | `Screen`         | safe area + padding + background                      |
 

@@ -15,6 +15,7 @@ import { useDayRollover } from '@/shared/hooks/useDayRollover';
 import { todayISO } from '@/shared/lib/dates';
 import { ThemeProvider, useTheme } from '@/shared/theme/ThemeProvider';
 import { Button } from '@/shared/ui/Button';
+import { ConfirmHost } from '@/shared/ui/ConfirmHost';
 import { Text } from '@/shared/ui/Text';
 import { ToastHost } from '@/shared/ui/ToastHost';
 
@@ -37,6 +38,7 @@ export default function RootLayout() {
             <RootStack />
           </DbProvider>
           <ToastHost />
+          <ConfirmHost />
           {/* Last, so it covers everything above (when app lock is on). */}
           <AppLockOverlay />
         </Themed>

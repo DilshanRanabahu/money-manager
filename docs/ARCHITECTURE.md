@@ -165,7 +165,7 @@ Delete uses **soft delete + undo**: the service sets `deleted_at`, the toast off
 | Transactions, categories (persistent)  | SQLite, read through `useQuery` / `queryCache` |
 | Ask Money chat history (90 days)       | SQLite `chat_messages`; the live chat keeps it in `useChat` state and saves changes (debounced) |
 | Theme preference, last used category   | `expo-sqlite/kv-store` via `settingsStore` |
-| Selected month, sheet open, toast      | Zustand `uiStore`              |
+| Selected month, sheet open, toast, confirm dialog | Zustand `uiStore`   |
 | Form input while typing                | Local component state          |
 | Derived totals, grouping               | Computed in `domain/` functions (memoized in hooks) |
 

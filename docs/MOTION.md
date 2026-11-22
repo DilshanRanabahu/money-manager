@@ -50,9 +50,10 @@ Tune these in one place. Components never invent their own numbers.
 | 6 | Amount input | Amount pops (1.04→1) on each new digit; invalid key shakes it with a warning haptic | `spring.bouncy`; shake = `withSequence` |
 | 7 | Category chip | Selected chip fills with its color and scales 1→1.05→1 | `spring.bouncy` + selection haptic |
 | 8 | Save | Success haptic; sheet closes; the new row fades in (only rows added after the month opened animate) and the balance rolls | `entering={FadeIn}` + `AnimatedNumber`; day headers are plain text for speed |
-| 9 | Delete | Swipe left reveals a static red area; past 110 px (or a fast fling) the row slides out, remaining rows spring into place; Undo toast slides in | Own light swipe row: one `usePanGesture` + one shared value; `layout={LinearTransition}` on the row |
+| 9 | Delete | Swipe left reveals a static red area; past 110 px (or a fast fling) the row springs to rest 88 px open and a confirm dialog asks; on Delete the row slides out, remaining rows spring into place, Undo toast slides in; on Cancel it springs back | Own light swipe row: one `usePanGesture` + one shared value; `layout={LinearTransition}` on the row |
 | 10 | Month switch | Title and content slide in from the direction of travel (fade + small offset); the old month disappears at once | `FadeInRight` / `FadeInLeft` keyed by month, `LayoutAnimationConfig skipExiting` |
 | 11 | Breakdown bars | Bars grow from 0 to their width, staggered 30 ms per row | `withDelay` + `withTiming` |
+| 14 | Confirm dialog | Backdrop fades in; card fades, scales 0.94→1 and rises 12 px (220 ms, `easing.out`); closes with a 150 ms fade. Reduce Motion: fade only | `ConfirmHost`: one shared value + `withTiming` |
 | 12 | Toast | Springs up from the bottom, auto-dismisses after 5 s, fades out | `SlideInDown` (gentle spring) + `FadeOutDown` |
 | 13 | Empty state | Icon fades and floats in once (no looping) | `FadeInDown` |
 

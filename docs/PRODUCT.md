@@ -30,7 +30,7 @@ A personal app that answers three questions, fast:
 
 ### 2. Edit / delete a transaction
 - Tap a row to edit.
-- Swipe a row left to delete, with an **Undo** toast (no confirm dialog).
+- Swipe a row left (or tap 🗑️ in the edit sheet) to delete. A themed **confirm dialog** shows the entry (category icon, amount, day, note) and asks first; Cancel, Back or a tap outside keeps it. After deleting, an **Undo** toast still appears.
 
 ### 3. Home: the month view
 - Month switcher at the top (arrows; tap the title to jump to the current month).
