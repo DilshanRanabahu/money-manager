@@ -69,7 +69,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 
 ## Security follow-ups
 - [x] Encrypt the database with SQLCipher (`expo-sqlite` `useSQLCipher`), key in `expo-secure-store`; migrate the existing plaintext DB; `allowBackup` off
-- [ ] Verify encryption on an installed build (Expo Go has no SQLCipher and keeps the plain DB)
+- [x] Verify encryption on an installed build (versionCode 7, 2026-11-22: Settings shows "Data encrypted · AES-256"; Expo Go has no SQLCipher and keeps the plain DB)
 - [ ] Optional password-protected backup export
 - [x] Block unused permissions Expo libraries add (storage, media images, overlay, audio) via `android.blockedPermissions`
 
