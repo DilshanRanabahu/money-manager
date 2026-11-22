@@ -39,7 +39,7 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Check the light theme on the device
 
 ## Milestone 5 — Release for myself
-- [x] App icon and splash (minimal wallet, `scripts/make-icon.py`)
+- [x] App icon and splash (`scripts/make-icon.py`; Nov 2026: colourful version, white wallet with sky / amber / emerald cards on an indigo → violet → pink gradient)
 - [x] Standalone Android build (EAS build or `npx expo run:android`), so Expo Go is not needed (EAS `preview` APK, versionCode 5, installed via adb 2026-11-21)
 - [ ] Use it for a full month; write down what was annoying
 
