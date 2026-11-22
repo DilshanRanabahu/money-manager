@@ -108,6 +108,7 @@ One icon set only: **Ionicons** (outline variants) via `@expo/vector-icons`, 16â
 ```
 
 - Opens with amount focused; the custom pad avoids the system keyboard jumping.
+- While typing a note the pad hides (Save sits above the keyboard). Closing the keyboard any way (Done, Back, âŒ„) or tapping the amount brings the pad back.
 - The last used category is pre-selected for faster entry.
 - Save closes the sheet; the new row animates into the list. (No vibration: haptics are off.)
 

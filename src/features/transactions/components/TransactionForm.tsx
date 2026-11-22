@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -54,6 +54,21 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
   const [saving, setSaving] = useState(false);
 
   const { categories } = useCategories(type);
+
+  // On Android, closing the keyboard with Back or its ⌄ key hides it but keeps the note
+  // focused, which would keep the number pad hidden. Leave the note so the pad comes back.
+  const noteRef = useRef<TextInputInstance>(null);
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidHide', () => noteRef.current?.blur());
+    return () => sub.remove();
+  }, []);
+
+  /** Back to typing the amount: close the keyboard / calendar so the number pad shows. */
+  const showPad = () => {
+    noteRef.current?.blur();
+    Keyboard.dismiss();
+    setCalendarOpen(false);
+  };
 
   // Pick a sensible default category: current choice if still valid, else last used, else first.
   const selectedCategory = useMemo(() => {
@@ -128,7 +143,13 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
         )}
       </View>
 
-      <View style={{ paddingVertical: spacing.xl, paddingHorizontal: spacing.lg }}>
+      <Pressable
+        onPress={showPad}
+        accessibilityRole="button"
+        accessibilityLabel="Amount"
+        accessibilityHint="Shows the number pad"
+        style={{ paddingVertical: spacing.xl, paddingHorizontal: spacing.lg }}
+      >
         <AmountDisplay raw={raw} type={type} shakeKey={shakeKey} />
         {error && (
           <Animated.View entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)}>
@@ -137,7 +158,7 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
             </Text>
           </Animated.View>
         )}
-      </View>
+      </Pressable>
 
       <CategoryPicker categories={categories} value={selectedCategory} onChange={setCategoryId} />
 
@@ -157,6 +178,7 @@ export function TransactionForm({ initial, onSubmit, onDone, onDelete }: Props) 
         <View style={[styles.flex, styles.noteBox, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}>
           <Icon name="create-outline" size={16} color={noteFocused || note ? 'text' : 'textMuted'} />
           <TextInput
+            ref={noteRef}
             value={note}
             onChangeText={setNote}
             onFocus={() => {
