@@ -11,6 +11,7 @@ import { useTheme } from '@/shared/theme/ThemeProvider';
 import { Icon } from '@/shared/ui/Icon';
 import { Text } from '@/shared/ui/Text';
 import { signedAmount, type TransactionWithCategory } from '../domain/types';
+import { confirmDeleteEntry } from './confirmDelete';
 
 type Props = {
   transaction: TransactionWithCategory;
@@ -21,11 +22,14 @@ type Props = {
 /** Drag further than this (or fling faster than VELOCITY) to delete. */
 const THRESHOLD = 110;
 const VELOCITY = 900;
+/** While the confirm dialog is open the row rests here, keeping the red area visible. */
+const REVEAL = 88;
 
 /**
  * One list row, kept deliberately light so long lists scroll smoothly:
  * one pan gesture, one shared value, one animated style. No per-row press animation.
- * Swipe left to delete: the row slides out, then onDelete runs.
+ * Swipe left to delete: the row stops with the red area showing and asks first;
+ * on Delete it slides out, then onDelete runs; on Cancel it springs back.
  */
 function TransactionRowBase({ transaction: t, onPress, onDelete }: Props) {
   const { colors, spacing } = useTheme();
@@ -35,6 +39,16 @@ function TransactionRowBase({ transaction: t, onPress, onDelete }: Props) {
   const id = t.id;
 
   const remove = useCallback(() => onDelete(id), [onDelete, id]);
+
+  const askDelete = useCallback(() => {
+    confirmDeleteEntry(t, {
+      onDelete: () =>
+        x.set(withTiming(-width, { duration: 180 }, (done) => {
+          if (done) scheduleOnRN(remove);
+        })),
+      onCancel: () => x.set(withSpring(0, spring.snappy)),
+    });
+  }, [t, x, width, remove]);
 
   const pan = usePanGesture(
     useMemo(
@@ -49,15 +63,14 @@ function TransactionRowBase({ transaction: t, onPress, onDelete }: Props) {
         onDeactivate: (e: PanGestureActiveEvent) => {
           'worklet';
           if (x.get() < -THRESHOLD || e.velocityX < -VELOCITY) {
-            x.set(withTiming(-width, { duration: 180 }, (done) => {
-              if (done) scheduleOnRN(remove);
-            }));
+            x.set(withSpring(-REVEAL, spring.snappy));
+            scheduleOnRN(askDelete);
           } else {
             x.set(withSpring(0, spring.snappy));
           }
         },
       }),
-      [width, remove, x],
+      [askDelete, x],
     ),
   );
 

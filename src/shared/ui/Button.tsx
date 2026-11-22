@@ -10,7 +10,8 @@ import { Text } from './Text';
 type Props = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  /** danger: soft red, for destructive actions (Delete). */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   disabled?: boolean;
   style?: ViewStyle;
   accessibilityHint?: string;
@@ -19,9 +20,13 @@ type Props = {
 export function Button({ label, onPress, variant = 'primary', disabled, style, accessibilityHint }: Props) {
   const { colors, radius, spacing } = useTheme();
 
-  const bg =
-    variant === 'primary' ? colors.accent : variant === 'secondary' ? colors.surfaceMuted : 'transparent';
-  const fg = variant === 'primary' ? 'onAccent' : 'text';
+  const bg = {
+    primary: colors.accent,
+    secondary: colors.surfaceMuted,
+    ghost: 'transparent',
+    danger: colors.expenseSoft,
+  }[variant];
+  const fg = variant === 'primary' ? 'onAccent' : variant === 'danger' ? 'expense' : 'text';
 
   const fade = useAnimatedStyle(() => ({
     opacity: withTiming(disabled ? 0.35 : 1, { duration: duration.fast }),

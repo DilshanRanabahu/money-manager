@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { useSettingsStore } from '@/shared/store/settingsStore';
+import { useUiStore } from '@/shared/store/uiStore';
 import { shouldLockOnReturn } from '../domain/lockPolicy';
 import { authenticate } from '../services/biometrics';
 import { stampNow, useLockStore, withoutLocking } from '../store/lockStore';
@@ -49,6 +50,9 @@ export function useAppLockLifecycle() {
   const locked = useLockStore((s) => s.locked);
   useEffect(() => {
     if (!locked) return;
+    // The confirm dialog is a Modal and would sit above the lock screen: cancel it.
+    const dialog = useUiStore.getState().confirm;
+    if (dialog) useUiStore.getState().settleConfirm(dialog.id, false);
     try {
       if (router.canDismiss()) router.dismissAll();
     } catch {

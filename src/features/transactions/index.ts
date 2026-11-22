@@ -1,3 +1,4 @@
+export { confirmDeleteEntry } from './components/confirmDelete';
 export { DayHeader } from './components/DayHeader';
 export { TransactionForm } from './components/TransactionForm';
 export { TransactionRow } from './components/TransactionRow';
