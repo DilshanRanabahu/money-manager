@@ -11,6 +11,7 @@ import { describeError, makeClient, MAX_HISTORY, runTurn } from '../services/cha
 import { createChatSaver, loadChatDay } from '../services/chatHistory';
 import { assistantData, restoreEntry } from '../services/data';
 import { toolLabel } from '../services/toolLabel';
+import { recordUsage } from '../services/usage';
 
 export type { Attachment, ChatItem, ProposalStatus } from '../domain/types';
 
@@ -207,6 +208,9 @@ export function useChat() {
               setActivity('');
             },
             onToolStart: (name) => setActivity(TOOL_ACTIVITY[name] ?? ''),
+            onUsage: (usage, firstCall) => {
+              void recordUsage(day, model, usage, firstCall).catch(() => {});
+            },
             onToolDone: (name, input, ok, card) => {
               const label = toolLabel(name, input, assistantData.today().slice(0, 4));
               if (!label) return;
@@ -228,7 +232,7 @@ export function useChat() {
         }
       }
     },
-    [busy, enabled, model, patch, saver],
+    [busy, day, enabled, model, patch, saver],
   );
 
   return { items, loaded, busy, activity, send, respond, undo };

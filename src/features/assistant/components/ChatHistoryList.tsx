@@ -5,6 +5,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatDayLabel, formatMonth, monthOf, type ISODate } from '@/shared/lib/dates';
+import { formatUsd } from '@/shared/lib/money';
 import { useUiStore } from '@/shared/store/uiStore';
 import { useTheme } from '@/shared/theme/ThemeProvider';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -103,6 +104,7 @@ const DayRow = memo(function DayRow({
   const meta = [
     `${day.messages} ${day.messages === 1 ? 'message' : 'messages'}`,
     day.photos > 0 ? `${day.photos} ${day.photos === 1 ? 'photo' : 'photos'}` : null,
+    day.cost > 0 ? formatUsd(day.cost) : null,
   ]
     .filter(Boolean)
     .join(' · ');

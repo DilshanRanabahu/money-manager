@@ -75,6 +75,23 @@ Ask Money chat history. One conversation per local day; kept 90 days; never expo
 
 **Index:** `idx_chat_day` on (`day`, `seq`). Saved with `ON CONFLICT(id) DO UPDATE` (payload and order only; the photo is written once). `purgeBefore(today − 89 days)` runs at app start. Backup import does not touch this table.
 
+### `ai_usage` (schema v5)
+
+Ask Money token counts, summed per day and model, to show what the user's API key spent. Counts only, no message content. Kept with the data (not purged); never exported in backups.
+
+| Column               | Type    | Notes                                              |
+| -------------------- | ------- | -------------------------------------------------- |
+| `day`                | text    | `YYYY-MM-DD` of the chat (PK with `model`)         |
+| `model`              | text    | e.g. `claude-haiku-5-5`                            |
+| `questions`          | integer | questions sent (one per user message)              |
+| `requests`           | integer | API calls (a question with tools takes several)    |
+| `input_tokens`       | integer | uncached input                                     |
+| `output_tokens`      | integer |                                                    |
+| `cache_write_tokens` | integer | `usage.cache_creation_input_tokens`                |
+| `cache_read_tokens`  | integer | `usage.cache_read_input_tokens`                    |
+
+Each API call adds to its row (`ON CONFLICT(day, model) DO UPDATE SET x = x + excluded.x`). Cost is not stored: `features/assistant/domain/usage.ts` computes it from list prices, in integer nano-dollars, and `formatUsd` in `money.ts` shows it.
+
 ### Schema source
 
 The tables are created by the SQL in `src/db/migrations.ts`. Repositories in `src/db/repositories` map rows to domain types.

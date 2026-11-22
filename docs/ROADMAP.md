@@ -60,6 +60,8 @@ Build in this order. Each milestone ends with something usable on the phone.
 - [x] Ask Money chat history: one chat per day saved on the phone (photos too), read-only past days, 90 days, not in backups
 - [x] Confirm dialog before deleting an entry (swipe and edit sheet), Undo toast kept; themed `ConfirmHost` instead of the native Alert
 - [x] Fix: after typing a note, the number pad did not come back when the keyboard was closed with Back / ⌄ (Android keeps the input focused); tapping the amount also brings it back
+- [x] Ask Money: cost shown in Settings (month) and Chat history (per day); prompt caching for tools + system and the growing conversation
+- [ ] Check prompt caching on the device: a 2nd question within 5 min should show `cache_read_input_tokens` (Settings shows "Prompt caching saved")
 - [ ] Test Delete → Undo on the device (swipe Cancel, Back button and the edit-sheet dialog checked in Expo Go 2026-11-22)
 - [ ] Test chat history on the device (reopen today's chat, open a past day, photo viewer, delete a day)
 - [x] Test receipt photos on the device (sample receipt through the resize → Claude pipeline: total, date and shop read correctly; the system photo picker and camera themselves still to try with a real receipt)

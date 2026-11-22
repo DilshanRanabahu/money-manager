@@ -57,6 +57,8 @@ export type StepEvents = {
   onToolStart(name: string): void;
   /** A tool finished; `card` is what the chat shows for it, if anything. */
   onToolDone(name: string, input: unknown, ok: boolean, card?: Card): void;
+  /** One API call finished; `firstCall` is true for the first call of the question. */
+  onUsage(usage: Anthropic.Usage, firstCall: boolean): void;
 };
 
 export class ChatError extends Error {}
@@ -97,14 +99,22 @@ export async function runTurn(opts: {
       {
         model,
         max_tokens: 8000,
+        // Prompt caching (5-minute TTL), two breakpoints:
+        // 1. On the system prompt: tools + system are cached together. Both stay byte-identical
+        //    all day (the prompt only holds today's date), so every question reuses them.
         system: [{ type: 'text', text: systemPrompt(data.today()), cache_control: { type: 'ephemeral' } }],
         tools: TOOL_DEFINITIONS as unknown as Anthropic.Tool[],
         messages: history,
+        // 2. Automatic: on the last message, moving forward as the chat grows. Each tool round
+        //    and each follow-up question re-sends the whole conversation; this reads it back
+        //    from the cache instead of paying full price again.
+        cache_control: { type: 'ephemeral' },
       },
       { signal },
     );
     stream.on('text', events.onText);
     const message = await stream.finalMessage();
+    events.onUsage(message.usage, step === 0);
 
     if (message.stop_reason === 'refusal') throw new ChatError("Claude can't help with that one.");
 

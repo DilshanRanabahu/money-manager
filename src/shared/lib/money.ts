@@ -90,3 +90,20 @@ export function amountForA11y(minor: number): string {
   const base = `${groupDigits(String(whole))} rupees`;
   return cents ? `${base} ${cents} cents` : base;
 }
+
+/**
+ * API cost in nano-dollars (1e-9 USD) -> "$0.0123" below $1 (4 decimals), "$1.23" from $1.
+ * Only for showing what Ask Money cost; it is not an amount in the app's currency.
+ */
+export function formatUsd(nano: number): string {
+  const n = Math.max(0, Math.round(nano));
+  if (n === 0) return '$0.00';
+  if (n < 1_000_000_000) {
+    const tenThousandths = Math.round(n / 100_000);
+    if (tenThousandths === 0) return '< $0.0001';
+    if (tenThousandths >= 10_000) return '$1.00';
+    return '$0.' + String(tenThousandths).padStart(4, '0');
+  }
+  const cents = Math.round(n / 10_000_000);
+  return '$' + groupDigits(String(Math.floor(cents / 100))) + '.' + String(cents % 100).padStart(2, '0');
+}

@@ -83,6 +83,22 @@ export const MIGRATIONS: string[] = [
 
   CREATE INDEX idx_chat_day ON chat_messages (day, seq);
   `,
+
+  // v5 — Ask Money token usage, summed per day and model (to show what the API key spent).
+  // Only counts, no message content. Not in backups.
+  `
+  CREATE TABLE ai_usage (
+    day TEXT NOT NULL,
+    model TEXT NOT NULL,
+    questions INTEGER NOT NULL DEFAULT 0,
+    requests INTEGER NOT NULL DEFAULT 0,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+    cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, model)
+  );
+  `,
 ];
 
 export async function migrate(db: SQLiteDatabase): Promise<void> {

@@ -12,6 +12,7 @@ import { SegmentedControl } from '@/shared/ui/SegmentedControl';
 import { Text } from '@/shared/ui/Text';
 import { loadApiKey, looksLikeKey, maskKey, removeApiKey, saveApiKey } from '../services/apiKey';
 import { testKey } from '../services/chatEngine';
+import { AiUsageCard } from './AiUsageCard';
 
 const MODELS = [
   { value: 'claude-haiku-5-5', label: 'Haiku · cheaper' },
@@ -152,6 +153,8 @@ export function AssistantSettings() {
               Model
             </Text>
             <SegmentedControl<AssistantModelPreference> options={MODELS} value={model} onChange={setModel} />
+
+            <AiUsageCard />
 
             <Text variant="caption" color="textFaint">
               The key stays encrypted on this phone. When you ask a question, only the totals and entries needed to
