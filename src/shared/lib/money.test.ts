@@ -1,4 +1,4 @@
-import { formatAmount, formatAmountCompact, formatNumber, groupDigits, parseAmount } from './money';
+import { formatAmount, formatAmountCompact, formatNumber, formatUsd, groupDigits, parseAmount } from './money';
 
 describe('parseAmount', () => {
   it.each([
@@ -52,5 +52,21 @@ describe('formatting', () => {
     expect(formatAmountCompact(12500000)).toBe('Rs. 125K');
     expect(formatAmountCompact(150000)).toBe('Rs. 1.5K');
     expect(formatAmountCompact(250000000)).toBe('Rs. 2.5M');
+  });
+});
+
+describe('formatUsd', () => {
+  it('shows small API costs with 4 decimals', () => {
+    expect(formatUsd(0)).toBe('$0.00');
+    expect(formatUsd(40_000)).toBe('< $0.0001');
+    expect(formatUsd(1_230_000)).toBe('$0.0012');
+    expect(formatUsd(123_400_000)).toBe('$0.1234');
+    expect(formatUsd(999_990_000)).toBe('$1.00');
+  });
+
+  it('shows a dollar or more with cents', () => {
+    expect(formatUsd(1_000_000_000)).toBe('$1.00');
+    expect(formatUsd(12_345_000_000)).toBe('$12.35');
+    expect(formatUsd(1_234_560_000_000)).toBe('$1,234.56');
   });
 });

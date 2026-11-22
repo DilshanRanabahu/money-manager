@@ -10,7 +10,7 @@
  * Pure TypeScript (no React) so it can be unit tested; the hook lives in useQuery.ts.
  */
 
-export type Table = 'transactions' | 'categories' | 'chat';
+export type Table = 'transactions' | 'categories' | 'chat' | 'ai_usage';
 
 type Listener = () => void;
 

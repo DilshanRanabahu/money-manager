@@ -2,6 +2,7 @@ import { chatRepo, type ChatRow } from '@/db/repositories/chatRepo';
 import type { ISODate } from '@/shared/lib/dates';
 import { changedMessages, chatCutoff, fromStored, previewText, savedKey } from '../domain/chatHistory';
 import type { ChatDay, ChatItem } from '../domain/types';
+import { costByDay } from './usage';
 
 /**
  * Saves the chat on the phone (inside the encrypted database) and reads it back.
@@ -66,12 +67,14 @@ export async function loadChatDay(day: ISODate): Promise<ChatItem[]> {
 
 /** Days that have a chat, newest first (within the kept 90 days). */
 export async function listChatDays(today: ISODate): Promise<ChatDay[]> {
-  const rows = await chatRepo.listDays(chatCutoff(today));
+  const from = chatCutoff(today);
+  const [rows, costs] = await Promise.all([chatRepo.listDays(from), costByDay(from)]);
   return rows.map((r) => ({
     day: r.day,
     messages: r.messages,
     photos: r.photos ?? 0,
     preview: previewText(r.first_user, r.photos ?? 0),
+    cost: costs.get(r.day) ?? 0,
   }));
 }
 

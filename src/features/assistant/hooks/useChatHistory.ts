@@ -4,11 +4,12 @@ import { useUiStore } from '@/shared/store/uiStore';
 import { listChatDays, loadChatDay } from '../services/chatHistory';
 
 const TABLES = ['chat'] as const;
+const DAYS_TABLES = ['chat', 'ai_usage'] as const;
 
-/** Days with a chat, newest first. */
+/** Days with a chat, newest first, with what each cost. */
 export function useChatDays() {
   const today = useUiStore((s) => s.today);
-  return useQuery(`chat:days:${today}`, () => listChatDays(today), TABLES);
+  return useQuery(`chat:days:${today}`, () => listChatDays(today), DAYS_TABLES);
 }
 
 /** One saved day, read-only. */

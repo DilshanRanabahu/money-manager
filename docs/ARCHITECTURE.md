@@ -83,12 +83,14 @@ money-manager/
 │   │   │   ├── services/         # chatHistory.ts (chatRepo: save queue, load day, list days, purge),
 │   │   │   │                     #   tools.ts (tool schemas + handlers, tested), chatEngine.ts (SDK client,
 │   │   │   │                     #   streaming tool loop), apiKey.ts (expo-secure-store), data.ts (real repos),
-│   │   │   │                     #   richText.ts + toolLabel.ts (pure, tested; tools also return UI cards)
-│   │   │   ├── domain/           # types.ts (ChatItem), chatHistory.ts (save/restore items, 90-day cutoff; pure, tested)
+│   │   │   │                     #   richText.ts + toolLabel.ts (pure, tested; tools also return UI cards),
+│   │   │   │                     #   usage.ts (record API usage per call, month totals, cost per day)
+│   │   │   ├── domain/           # types.ts (ChatItem), chatHistory.ts (save/restore items, 90-day cutoff; pure, tested),
+│   │   │   │                     #   usage.ts (token prices, cost and caching savings in nano-dollars; pure, tested)
 │   │   │   ├── hooks/            # useChat (today's chat: loads earlier messages as a snapshot, saves changes),
-│   │   │   │                     #   useChatHistory (useChatDays, useChatDay)
+│   │   │   │                     #   useChatHistory (useChatDays, useChatDay), useAiUsage (month usage)
 │   │   │   └── components/       # ChatView, ChatMessage, ChatHistoryList, ChatDayView, ImageViewer, ScreenHeader,
-│   │   │                         #   ProposalCard, ToolCard, RichText, TypingDots, AssistantSettings
+│   │   │                         #   ProposalCard, ToolCard, RichText, TypingDots, AssistantSettings, AiUsageCard
 │   │   └── backup/
 │   │       ├── services/         # exportData.ts, importData.ts
 │   │       ├── domain/           # backupSchema.ts (Zod)
@@ -104,7 +106,8 @@ money-manager/
 │   │   └── repositories/
 │   │       ├── transactionRepo.ts
 │   │       ├── categoryRepo.ts
-│   │       └── chatRepo.ts       # Ask Money history (chat_messages)
+│   │       ├── chatRepo.ts       # Ask Money history (chat_messages)
+│   │       └── aiUsageRepo.ts    # Ask Money token counts per day and model (ai_usage)
 │   │
 │   ├── shared/
 │   │   ├── ui/                   # Text, Button, TabBar, ToastHost, PressableScale, AnimatedNumber, MonthSwitcher...
@@ -164,6 +167,7 @@ Delete uses **soft delete + undo**: the service sets `deleted_at`, the toast off
 | -------------------------------------- | ------------------------------ |
 | Transactions, categories (persistent)  | SQLite, read through `useQuery` / `queryCache` |
 | Ask Money chat history (90 days)       | SQLite `chat_messages`; the live chat keeps it in `useChat` state and saves changes (debounced) |
+| Ask Money token usage                  | SQLite `ai_usage`, added to after every API call; cost computed when shown |
 | Theme preference, last used category   | `expo-sqlite/kv-store` via `settingsStore` |
 | Selected month, sheet open, toast, confirm dialog | Zustand `uiStore`   |
 | Form input while typing                | Local component state          |

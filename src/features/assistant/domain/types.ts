@@ -25,4 +25,6 @@ export type ChatDay = {
   photos: number;
   /** First thing the user asked that day. */
   preview: string;
+  /** What that day's chat cost on the API key, in nano-dollars (0 if nothing was recorded). */
+  cost: number;
 };
